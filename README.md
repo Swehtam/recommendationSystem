@@ -1,18 +1,8 @@
-## Glossário
-
-Para melhor compreensão das atividades desenvolvidas, faz-se necessário o entendimento de termos que são utilizados durante as descrições dos algoritmos.
-
-1.  **Root Mean Squared Errors (RMSE)**
-    É a raíz do erro quadrático médio, onde esse erro é a distância entre os valores obtidos e os valores esperados. Quanto menor o RMSE, melhor é a recomendação.
-
-2.  **Recall**
-    Nos algoritmos utilizados, é o percentual de produtos que um cliente comprou que foram, de fato, recomendados.
-
-3.  **Precision**
-    Nos algoritmos utilizados, representa quantos itens o cliente comprou dos recomendados.
-
-4.  **Filtro Colaborativo**
-    Filtro que recomenda itens baseado na semelhança entre compras de usuários.
+## TO-DO 
+- [x] Avaliação dos modelos 
+- [x] Escolha do modelo final
+- [x] Comparação de outputs com o site
+- [] Ataptação do código para API
 
 ## Bibliotecas 
 ```
