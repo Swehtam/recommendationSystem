@@ -2,7 +2,7 @@
 - [x] Avaliação dos modelos 
 - [x] Escolha do modelo final
 - [x] Comparação de outputs com o site
-- [] Ataptação do código para API
+- [ ] Ataptação do código para API
 
 ## Bibliotecas 
 ```
