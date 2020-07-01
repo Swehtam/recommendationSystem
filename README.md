@@ -1,3 +1,6 @@
+## IMPORTANTE
+Por enquanto, os códigos constam no Jupyter Notebook (arquivo .ipynb)
+
 ## TO-DO 
 - [x] Avaliação dos modelos 
 - [x] Escolha do modelo final
