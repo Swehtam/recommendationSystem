@@ -11,7 +11,7 @@
 > **OBS.:** A API ainda precisa ter seu método de adição de novas compras generalizada para n adições. E também precisa apresentar freq de recomemdação por produto e indicar suas instâncias de recomendações.
 
 ## API 
-| endpoint                            |                          descrição                           | Método          |
+| Endpoint                            |                          Descrição                           | Método          |
 | ----------------------------------- | :----------------------------------------------------------: | --------------- |
 | /recommendations                    |           Lista todas as recomendações por cliente           | recommendations |
 | /recommendations/<string:'user_id'> |      Lista as recomendações para um determinado cliente      | recom_per_user  |
