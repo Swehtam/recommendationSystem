@@ -36,20 +36,23 @@ def add_purchase():
 
 @app.route('/recommendations/product/<string:product_id>', methods=['GET'])
 def product_recom_summary(product_id):
+    if(len(product_id) < 5):
+        return jsonify({'error':'Não é um código de produto válido.'}), 404
     output = pd.read_csv('output.csv', sep = ";")
     contain_values = output[output['recommendedProducts'].str.contains(product_id)]
-    print("Número de recomendações desse produto:", len(contain_values.index))
-    if (len(contain_values) == 0):
+    if(len(contain_values) == 0):
         return jsonify({'error':'Não há recomendações com esse produto.'}), 404
     else:
         return contain_values.to_html(), 200
-
+    
 @app.route('/recommendations/count/<string:product_id>', methods=['GET'])
 def product_recom_count(product_id):
+    if(len(product_id) < 5):
+        return jsonify({'error':'Não é um código de produto válido.'}), 404
     output = pd.read_csv('output.csv', sep = ";")
     contain_values = output[output['recommendedProducts'].str.contains(product_id)]
     count = ("Número de recomendações desse produto:", len(contain_values.index))
-    if (len(contain_values) == 0):
+    if(len(contain_values) == 0):
         return jsonify({'error':'Não há recomendações com esse produto.'}), 404
     else:
         return jsonify(count), 200
@@ -57,3 +60,4 @@ def product_recom_count(product_id):
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
+    
