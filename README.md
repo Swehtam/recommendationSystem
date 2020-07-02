@@ -1,6 +1,6 @@
 ## IMPORTANTE
-Os códigos de teste constam no Jupyter Notebook (arquivo .ipynb)
-A API consta no diretório API. :smile:
+- Os códigos de teste constam no Jupyter Notebook (arquivo .ipynb)
+- A API consta no diretório API. :smile:
 
 ## TO-DO 
 - [x] Avaliação dos modelos 
