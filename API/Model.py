@@ -1,11 +1,11 @@
-'''import pandas as pd
+import pandas as pd
 import turicreate as tc
 import numpy as np
 from sklearn.model_selection import train_test_split
-'''
+
 class Model:
     print("ABRIU MODEL.PY")
-'''    
+    
     def matrix_normalization(self,db):
         df_matrix = pd.pivot_table(db, values = 'QUANTIDADE', index = 'COD_CLIENTE', columns = 'COD_PRODUTO')
         df_matrix_norm = (df_matrix-df_matrix.min())/(df_matrix.max()-df_matrix.min())
@@ -36,15 +36,15 @@ class Model:
         recom = model.recommend(users=users_to_recommend, k=n_rec)
         return recom
 
-    def create_output(self,model, users_to_recommend, n_rec, print_csv=True):
+    def create_output(self,model,user_id, item_id, users_to_recommend, n_rec, print_csv=True):
         recomendation = model
         df_rec = recomendation.to_dataframe()
         df_rec['recommendedProducts'] = df_rec.groupby([user_id])[item_id].transform(lambda x: '|'.join(x.astype(str)))
-        df_output = df_rec[['COD_CLIENTE', 'recommendedProducts']].drop_duplicates().sort_values('COD_CLIENTE').set_index('COD_CLIENTE')
+        df_output = df_rec[['COD_CLIENTE','recommendedProducts']].drop_duplicates().sort_values('COD_CLIENTE').set_index('COD_CLIENTE')
 
         if print_csv:
             df_output.to_csv(r'output.csv', sep=';')
             print("An output file can be found with name 'output.csv'")
 
         return df_output
-'''
+
