@@ -1,11 +1,21 @@
 ## IMPORTANTE
-Por enquanto, os códigos constam no Jupyter Notebook (arquivo .ipynb)
+- Os códigos de teste constam no Jupyter Notebook (arquivo .ipynb)
+- A API consta no diretório API. :smile:
 
 ## TO-DO 
 - [x] Avaliação dos modelos 
 - [x] Escolha do modelo final
 - [x] Comparação de outputs com o site
-- [ ] Ataptação do código para API
+- [x] Ataptação do código para API 
+
+> **OBS.:** A API ainda precisa ter seu método de adição de novas compras generalizada para n adições. E também precisa apresentar freq de recomemdação por produto e indicar suas instâncias de recomendações.
+
+## API 
+| Endpoint                            |                          Descrição                           | Método          |
+| ----------------------------------- | :----------------------------------------------------------: | --------------- |
+| /recommendations                    |           Lista todas as recomendações por cliente           | recommendations |
+| /recommendations/<string:'user_id'> |      Lista as recomendações para um determinado cliente      | recom_per_user  |
+| /purchase/add                       | Adiciona uma nova instância de compra na BD e retreina as recomendações, gerando um novo output de recomendações | add_purchase    |
 
 ## Bibliotecas 
 ```
