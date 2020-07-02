@@ -7,16 +7,17 @@
 - [x] Escolha do modelo final
 - [x] Comparação de outputs com o site
 - [x] Ataptação do código para API 
-- [ ] Aprimorar a API
 
-> **OBS.:** A API ainda precisa ter seu método de adição de novas compras generalizada para n adições. E também precisa apresentar freq de recomemdação por produto e indicar suas instâncias de recomendações.
 
 ## API 
-| Endpoint                            |                          Descrição                           | Método          |
-| ----------------------------------- | :----------------------------------------------------------: | --------------- |
-| /recommendations                    |           Lista todas as recomendações por cliente           | recommendations |
-| /recommendations/<string:'user_id'> |      Lista as recomendações para um determinado cliente      | recom_per_user  |
-| /purchase/add                       | Adiciona uma nova instância de compra na BD e retreina as recomendações, gerando um novo output de recomendações | add_purchase    |
+| Endpoint                                       |                          Descrição                           | Método                |
+| ---------------------------------------------- | :----------------------------------------------------------: | --------------------- |
+| /recommendations                               |           Lista todas as recomendações por cliente           | recommendations       |
+| /recommendations/<string:'user_id'>            |      Lista as recomendações para um determinado cliente      | recom_per_user        |
+| /recommendations/count/<string:'product_id'>   | Informa a quantidade de recomendações feitas com esse produto. | product_recom_count   |
+| /recommendations/product/<string:'product_id'> |    Lista as recomendações contendo um determinado produto    | product_recom_summary |
+| /purchase/add                                  | Adiciona uma nova instância de compra na BD e retreina as recomendações, gerando um novo output de recomendações | add_purchase          |
+| /                                              |        Default: retorna a mensagem "Você se conectou"        | home                  |
 
 ## Bibliotecas 
 ```
