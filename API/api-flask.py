@@ -7,7 +7,7 @@ add_product = Purchase()
 
 @app.route('/')
 def home():
-    return "http://127.0.0.1:5000/recommendations"
+    return "Você se conectou. :)"
 
 @app.route('/recommendations', methods=['GET'])
 def recommendations():
@@ -32,7 +32,27 @@ def recom_per_user(user_id):
 def add_purchase():
     entry = request.get_json()
     status = add_product.add(entry)
-    return status
+    return status, 201
+
+@app.route('/recommendations/product/<string:product_id>', methods=['GET'])
+def product_recom_summary(product_id):
+    output = pd.read_csv('output.csv', sep = ";")
+    contain_values = output[output['recommendedProducts'].str.contains(product_id)]
+    print("Número de recomendações desse produto:", len(contain_values.index))
+    if (len(contain_values) == 0):
+        return jsonify({'error':'Não há recomendações com esse produto.'}), 404
+    else:
+        return contain_values.to_html(), 200
+
+@app.route('/recommendations/count/<string:product_id>', methods=['GET'])
+def product_recom_count(product_id):
+    output = pd.read_csv('output.csv', sep = ";")
+    contain_values = output[output['recommendedProducts'].str.contains(product_id)]
+    count = ("Número de recomendações desse produto:", len(contain_values.index))
+    if (len(contain_values) == 0):
+        return jsonify({'error':'Não há recomendações com esse produto.'}), 404
+    else:
+        return jsonify(count), 200
 
 
 if __name__ == '__main__':
