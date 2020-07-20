@@ -11,7 +11,7 @@ class Recommendation:
     def retrain_model(self):
         # variables to define field names:
         # CHANGE TO READ THE PROVIDED DATA
-        db = pd.read_csv('/var/www/recommendationSystem/API/data_armz.csv', sep = ';')
+        db = pd.read_csv('data_armz.csv', sep = ';')
         user_id = 'COD_CLIENTE'
         item_id = 'COD_PRODUTO'
         item_name = 'NOME_PRODUTO'
