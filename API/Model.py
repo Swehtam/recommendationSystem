@@ -46,7 +46,7 @@ class Model:
         df_output = df_rec[['COD_CLIENTE','recommendedProducts']].drop_duplicates().sort_values('COD_CLIENTE').set_index('COD_CLIENTE')
 
         if print_csv:
-            df_output.to_csv(r'/var/www/recommendationSystem/API/output.csv', sep=';')
+            df_output.to_csv(r'output.csv', sep=';')
             print("An output file can be found with name 'output.csv'")
 
         return df_output
