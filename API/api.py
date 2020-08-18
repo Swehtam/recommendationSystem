@@ -4,13 +4,16 @@
 import sys
 sys.path.append(".")
 from flask import Flask, jsonify, request
+import json
 import pandas as pd
 from Purchase import Purchase
 from Recommendation import Recommendation
+from Description import Description
 
 app = Flask(__name__)
 add_product = Purchase()
 retrain_recom = Recommendation()
+description = Description()
 
 @app.route('/')
 def home():
@@ -33,7 +36,20 @@ def recom_per_user(user_id):
         return jsonify({'error':'not found'}), 404
     else:
         client = output[output.index == index[0]]
+        #recoms = description.list_recom(output, user_id)
         return client.to_json(), 200
+
+# ---- ESSA É A PARTE NOVA ----#
+
+@app.route('/recommendations/desc/<string:user_id>', methods=['GET'])
+def recom_desc_user(user_id):
+    output = pd.read_csv('output.csv', sep = ";")
+    index = output[output['COD_CLIENTE']==user_id].index.values
+    if (len(index) == 0):
+        return jsonify({'error':'not found'}), 404
+    else:
+        recoms = description.list_recom(output, user_id)
+        return str(recoms), 200
 
 
 @app.route('/purchase/add', methods=['POST'])

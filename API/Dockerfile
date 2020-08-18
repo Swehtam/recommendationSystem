@@ -10,5 +10,5 @@ COPY . /API
 
 EXPOSE 80
 
-ENTRYPOINT ["python3"]
+ENTRYPOINT ["python"]
 CMD ["api.py"]
