@@ -49,7 +49,7 @@ def recom_desc_user(user_id):
         return jsonify({'error':'not found'}), 404
     else:
         recoms = description.list_recom(output, user_id)
-        return str(recoms), 200
+        return recoms.to_json(), 200
 
 
 @app.route('/purchase/add', methods=['POST'])

@@ -22,7 +22,20 @@ class Description:
         for product in products:
             print('produto de num: ', product)
             recoms.append(recom.model(int(product),3))
-            
-        return recoms
+        similar_df = self.list_similar(products, recoms)
+        print(similar_df)
+        return similar_df
+
+    def list_similar(self, products, recoms):
+        similar_df = pd.DataFrame()
+        similar_df['Product'] = products
+        final = []
+        for recom in recoms: 
+            aux = list(zip(*recom))
+            final.append(aux[1])
+
+        print("Final ta dessa forma: ", final)
+        similar_df['Similar Products'] = final
+        return similar_df
 
 
