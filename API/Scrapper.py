@@ -12,7 +12,7 @@ class Scrapper():
         descriptions_df = descriptions_df[['COD_PRODUTO', 'NOME_PRODUTO']].copy()
         descriptions_df = descriptions_df.drop_duplicates()
         # Dealing with json response 
-        new_products = pd.Dataframe(entry)
+        new_products = pd.DataFrame(entry)
         data_final = descriptions_df.append(new_products, ignore_index = True)
         # Adding a '0' character before each product code
         codes = []
