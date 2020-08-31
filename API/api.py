@@ -9,11 +9,13 @@ import pandas as pd
 from Purchase import Purchase
 from Recommendation import Recommendation
 from Description import Description
+from Scrapper import Scrapper
 
 app = Flask(__name__)
 add_product = Purchase()
 retrain_recom = Recommendation()
 description = Description()
+scrap_desc = Scrapper()
 
 @app.route('/')
 def home():
@@ -51,6 +53,11 @@ def recom_desc_user(user_id):
         recoms = description.list_recom(output, user_id)
         return recoms.to_json(), 200
 
+@app.route('/update', methods=['POST'])
+def add_new_product():
+    entry = request.get_json()
+    status = add_product.add(entry)
+    return status, 201
 
 @app.route('/purchase/add', methods=['POST'])
 def add_purchase():
