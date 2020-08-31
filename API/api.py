@@ -56,7 +56,7 @@ def recom_desc_user(user_id):
 @app.route('/update', methods=['POST'])
 def add_new_product():
     entry = request.get_json()
-    status = add_product.add(entry)
+    status = scrap_desc.add_prod_description(entry)
     return status, 201
 
 @app.route('/purchase/add', methods=['POST'])

@@ -6,7 +6,7 @@ import re
 
 class Scrapper():
 
-    def add_product(self, entry):
+    def add_prod_description(self, entry):
         # Reading csv 
         descriptions_df = pd.read_csv('data_final.csv', sep=';')
         descriptions_df = descriptions_df[['COD_PRODUTO', 'NOME_PRODUTO']].copy()
