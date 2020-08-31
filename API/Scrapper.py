@@ -16,7 +16,7 @@ class Scrapper():
         data_final = descriptions_df.append(new_products, ignore_index = True)
         # Adding a '0' character before each product code
         codes = []
-        for code in tqdm(new_products.COD_PRODUTO):
+        for code in tqdm(data_final.COD_PRODUTO):
             code = '0' + str(code)
             codes.append(code)
 
@@ -27,6 +27,7 @@ class Scrapper():
         for product in tqdm(data.CODE):
             url = 'https://www.armazempb.com.br/ccstoreui/v1/products/' + str(product) + '?fields=longDescription'
             text = get(url).text.encode('utf-8') 
+            text = text.decode('utf-8')
             match = re.findall(">(.*?)</", text)
             descriptions.append(match)     
         
