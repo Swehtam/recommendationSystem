@@ -17,18 +17,22 @@ retrain_recom = Recommendation()
 description = Description()
 scrap_desc = Scrapper()
 
+# ************************************************************* #
+# *********************** MÉTODOS GET ************************* #
+# ************************************************************* #
+
 @app.route('/')
 def home():
     return "Você se conectou."
 
-
+# - Lista todas as recomendações
 @app.route('/recommendations', methods=['GET'])
 def recommendations():
     output = pd.read_csv('output.csv', sep = ";")
     output.set_index(['COD_CLIENTE'], inplace=False)
     return output.to_json(), 200
 
-
+# - Lista recomendações para um dado cliente
 @app.route('/recommendations/<string:user_id>', methods=['GET'])
 def recom_per_user(user_id):
     output = pd.read_csv('output.csv', sep = ";")
@@ -41,8 +45,7 @@ def recom_per_user(user_id):
         #recoms = description.list_recom(output, user_id)
         return client.to_json(), 200
 
-# ---- ESSA É A PARTE NOVA ----#
-
+# - Lista produtos semelhantes aos recomendados para o cliente
 @app.route('/recommendations/desc/<string:user_id>', methods=['GET'])
 def recom_desc_user(user_id):
     output = pd.read_csv('output.csv', sep = ";")
@@ -52,26 +55,8 @@ def recom_desc_user(user_id):
     else:
         recoms = description.list_recom(output, user_id)
         return recoms.to_json(), 200
-
-@app.route('/update', methods=['POST'])
-def add_new_product():
-    entry = request.get_json()
-    status = scrap_desc.add_prod_description(entry)
-    return status, 201
-
-@app.route('/purchase/add', methods=['POST'])
-def add_purchase():
-    entry = request.get_json()
-    status = add_product.add(entry)
-    return status, 201
-
-
-@app.route('/retrain', methods=['GET'])
-def retrain():
-    status = retrain_recom.retrain_model()
-    return status, 201
-
-
+    
+# - Lista recomendações em que o produto aparece
 @app.route('/recommendations/product/<string:product_id>', methods=['GET'])
 def product_recom_summary(product_id):
     if(len(product_id) < 5):
@@ -83,7 +68,7 @@ def product_recom_summary(product_id):
     else:
         return contain_values.to_json(), 200
 
-
+# Conta quantas vezes o produto foi recomendado
 @app.route('/recommendations/count/<string:product_id>', methods=['GET'])
 def product_recom_count(product_id):
     if(len(product_id) < 5):
@@ -95,6 +80,30 @@ def product_recom_count(product_id):
         return jsonify({'error':'Não há recomendações com esse produto.'}), 404
     else:
         return jsonify(count), 200
+
+# - Retreina o modelo
+@app.route('/retrain', methods=['GET'])
+def retrain():
+    status = retrain_recom.retrain_model()
+    return status, 201
+
+# ************************************************************** #
+# *********************** MÉTODOS POST ************************* #
+# ************************************************************** #
+
+# - Adiciona produtos e suas respectivas descrições na base de descrições
+@app.route('/update', methods=['POST'])
+def add_new_product():
+    entry = request.get_json()
+    status = scrap_desc.add_prod_description(entry)
+    return status, 201
+
+# - Adiciona novas compras na base de treino
+@app.route('/purchase/add', methods=['POST'])
+def add_purchase():
+    entry = request.get_json()
+    status = add_product.add(entry)
+    return status, 201
 
 
 if __name__ == '__main__':
