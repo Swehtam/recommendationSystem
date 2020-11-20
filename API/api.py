@@ -10,12 +10,14 @@ from Purchase import Purchase
 from Recommendation import Recommendation
 from Description import Description
 from Scrapper import Scrapper
+from CartRecom import CartRecom
 
 app = Flask(__name__)
 add_product = Purchase()
 retrain_recom = Recommendation()
 description = Description()
 scrap_desc = Scrapper()
+cart_recom = CartRecom()
 
 # ************************************************************* #
 # *********************** MÉTODOS GET ************************* #
@@ -33,17 +35,19 @@ def recommendations():
     return output.to_json(), 200
 
 # - Lista recomendações para um dado cliente
-@app.route('/recommendations/<string:user_id>', methods=['GET'])
-def recom_per_user(user_id):
-    output = pd.read_csv('output.csv', sep = ";")
-    index = output[output['COD_CLIENTE']==user_id].index.values
-    print("o index eh", index)
-    if (len(index) == 0):
-        return jsonify({'error':'not found'}), 404
+@app.route('/get_recommendations/<string:user_id, string:product_id>', methods=['GET'])
+def recom_per_user(user_id, product_id):    
+    if(user_id != None and product_id == None):
+        output = pd.read_csv('output.csv', sep = ";")
+        index = output[output['COD_CLIENTE']==user_id].index.values
+        client_recom = output[output.index == index[0]]     
+        return client_recom.to_json(), 200
+    elif(user_id == None and product_id != None):
+        product_recom = cart_recom.get_products_to_recommend(product_id)
+        return product_recom.to_json(), 200
     else:
-        client = output[output.index == index[0]]
-        #recoms = description.list_recom(output, user_id)
-        return client.to_json(), 200
+        return jsonify({'error':'Não há como gerar recomendações sem um produto ou cliente.'}), 404
+
 
 # - Lista produtos semelhantes aos recomendados para o cliente
 @app.route('/recommendations/desc/<string:user_id>', methods=['GET'])
