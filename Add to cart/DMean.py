@@ -1,4 +1,5 @@
-
+#!/usr/bin/env python3.6.9
+# -*- coding: utf-8 -*-
 import pandas as pd
 
 class DMean():
