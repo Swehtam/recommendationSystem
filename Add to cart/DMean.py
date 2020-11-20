@@ -1,9 +1,19 @@
 #!/usr/bin/env python3.6.9
 # -*- coding: utf-8 -*-
 import pandas as pd
+import pickle
 
 class DMean():
-
+    classif_dict = None
+    df_class_cliente = None
+    
+    def __init__(self):
+        self.df_class_cliente = pickle.load(open("/pickle/df_class_cliente.pickle", "rb"))
+        self.classif_dict = pickle.load(open("/pickle/classif_dict.pickle", "rb"))
+    
+    def get_classif_dict(self):
+        return classif_dict
+        
     def get_media_sum_cliente(self, df_class_cliente):
         media_sum = 0
         for index, rows in df_class_cliente.iterrows():
@@ -59,4 +69,25 @@ class DMean():
             d_mean = self.get_d_mean_classif(classif, df_class_cliente)
             df_class_cliente.loc[[index], 'D_MEDIA'] = d_mean
 
-        return df_class_cliente
+        #Salvar os novos valores tanto no pickle quanto na variavel
+        self.df_class_cliente = df_class_cliente
+        pickle.dump(df_class_cliente, open("/pickle/df_class_cliente.pickle", "wb"))
+        
+        #Por ultimo, chamar a fun??o para cirar o novo dicionario depois de criar uma nova df de classificacao
+        self.classif_dict()
+        
+    def classif_dict(self):
+        std = self.df_class_cliente.D_MEDIA.std()
+        mean = self.df_class_cliente.D_MEDIA.mean()
+
+        d_mean_threshold = mean + std
+
+        classif_dict = {}
+        for index,rows in self.df_class_cliente.iterrows():
+            if (rows['D_MEDIA'] >= d_mean_threshold):
+                classif_dict[rows['CLASSIFICACAO']] = True
+            else:
+                classif_dict[rows['CLASSIFICACAO']] = False
+
+        self.classif_dict = classif_dict
+        pickle.dump(classif_dict, open("/pickle/classif_dict.pickle", "wb"))
