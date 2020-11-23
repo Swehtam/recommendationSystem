@@ -1,20 +1,25 @@
 #!/usr/bin/env python3.6.9
 # -*- coding: utf-8 -*-
-import pandas 
+import pandas as pd
 from sklearn.metrics.pairwise import cosine_similarity
 from scipy.sparse import csr_matrix
+import pickle
 
 class SimilarityModel():
     sim_results = None
-    df_matrix_u_c = None
     
     def __init__(self):
-        sim_results = pickle.load( open( "/pickle/cosine_sim_matrix.pickle", "rb" ) )
+        self.sim_results = pickle.load( open( "cosine_sim_matrix.pickle", "rb" ) )
+        
         
     def save_matrix(self, cosine_sim_matrix):
-        pickle.dump(cosine_sim_matrix, open("/pickle/cosine_sim_matrix.pickle"))
+        pickle.dump(cosine_sim_matrix, open("cosine_sim_matrix.pickle", "wb"))
 
-    def create_cosine_similarity_matrix(self, matrix_u_c):
+    #Lembrar de pensar na melhor forma de passar esse 'classif_dict', por exemplo,
+    #Pensar aonde vai criar o objeto da classe DMean para passar o 'classif_dict' como parametro
+    #Teoricamente se criar mais de 1 objeto vai ter q ler os arquivos .pickle para cada objeto
+    #Caso tenha como criar uma variavel static em python, então nao tem oq se precoupar com mais 1 objeto
+    def create_cosine_similarity_matrix(self, matrix_u_c, classif_dict):
         '''
             Calcula a matriz de similaridades entre classificações
 
@@ -38,7 +43,8 @@ class SimilarityModel():
 
             similar_items = [(cos_similarity[index][i], matrix_u_c_index['CLASSIFICACAO'][i]) for i in similar_indexes]
             results[rows['CLASSIFICACAO']] = similar_items
-            self.save_matrix(results)
+        
+        self.save_matrix(results)
 
     def get_product_name(self, code, df_compras):
         name = df_compras.loc[df_compras['COD_PRODUTO'] == code]['NOME_PRODUTO'].values[0]
@@ -61,7 +67,7 @@ class SimilarityModel():
         df_products_recoms = pd.DataFrame(columns = ['COD_PRODUTO'])
 
         for rec in recoms:
-            df_aux = df_compras.loc[df_compras['CLASSIFICACAO'] == rec[1]]['COD_PRODUTO']]
+            df_aux = df_compras.loc[df_compras['CLASSIFICACAO'] == rec[1]]['COD_PRODUTO']
             df_products_recoms = pd.concat([df_products_recoms, df_aux])
             
         df_products_recoms.drop_duplicates()

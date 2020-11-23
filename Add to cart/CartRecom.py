@@ -21,7 +21,7 @@ class CartRecom():
     
     def __init__(self): 
         self.df_compras = pd.read_csv('data_armz.csv', sep = ';')
-        self.df_products = pd.read_csv('df_produtos.csv', sep = ';')
+        self.df_products = pd.read_csv('df_product.csv', sep = ';')
         
         db_copy = self.df_compras.copy()
         db_copy['DUMMY'] = 1

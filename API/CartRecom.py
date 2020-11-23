@@ -20,8 +20,9 @@ class CartRecom():
     stopwords = None 
     
     def __init__(self): 
-        self.df_compras = pd.read_csv('data_armz.csv', sep = ';')
-        self.df_products = pd.read_csv('df_produtos.csv', sep = ';')
+        self.df_compras = pd.read_csv('dados_vendas.csv', sep = ';')
+        self.df_compras.CLASSIFICACAO = self.df_compras.CLASSIFICACAO.apply(lambda x : x.strip())
+        self.df_products = pd.read_csv('df_product.csv', sep = ';')
         
         db_copy = self.df_compras.copy()
         db_copy['DUMMY'] = 1
@@ -44,12 +45,13 @@ class CartRecom():
         
     def get_products_to_recommend(self, code, max_recom=3):
         products = similarityModel.get_products_recom_array(code, max_recom, self.df_compras)
+        print(self.df_compras[self.df_compras.COD_PRODUTO == 25756].CLASSIFICACAO)
         products_codes = self.get_products_list(code, products)
         purchase_similarity = self.purchase_similarity_recom(products_codes, code)
         description_similarity = self.description_similarity_recom(products_codes, code)
 
         #Calcular a média das tuplas de cada uma das recomendações
-        all_tuples_similarity = description_results[product_input] + purchase_results[product_input]
+        all_tuples_similarity = description_similarity + purchase_similarity
         similarity_dict = {}
         #Cria um dicionario e o preenche com os valores de cada uma das recomendações 
         [similarity_dict [t [1]].append(t [0]) if t [1] in list(similarity_dict.keys()) else similarity_dict.update({t [1]: [t [0]]}) for t in all_tuples_similarity]
@@ -57,6 +59,7 @@ class CartRecom():
           similarity_dict[key] = sum(similarity_dict[key])/2
 
         recommended_products = sorted(similarity_dict.items(), key=lambda x: x[1], reverse = True)
+        recommended_products = [lis[0] for lis in recommended_products] 
         return recommended_products[:10]
     
     def get_products_list(self, code, products):
@@ -85,7 +88,7 @@ class CartRecom():
         
     #Modelo de recomendação por similaridade de descrição dos produtos
     def description_similarity_recom(self, products_codes, code):
-        df_modelo = self.df_products[self.df_products.CODE.isin(products_codes)]
+        df_modelo = self.df_products[self.df_products.COD_PRODUTO.isin(products_codes)]
 
         df_modelo.DESCRIPTION = df_modelo.DESCRIPTION.apply(lambda x : x.lower())
         # - remove números e caracteres especiais 
@@ -97,8 +100,12 @@ class CartRecom():
         stemmer = nltk.stem.RSLPStemmer()
         df_modelo.DESCRIPTION = df_modelo.DESCRIPTION.apply(lambda x: stemmer.stem(x))
         
+        # - reseta indices
+        df_modelo.reset_index(inplace = True)
+        
         TF = TfidfVectorizer(analyzer='word', ngram_range=(1,3), min_df=0, stop_words=self.stopwords)
         TFIDF_matrix = TF.fit_transform(df_modelo['DESCRIPTION'])
+                
         # Calculating cosine similarity
         cos_similarity = linear_kernel(TFIDF_matrix, TFIDF_matrix)
         
@@ -109,4 +116,4 @@ class CartRecom():
             similar_items = [(cos_similarity[index][i], df_modelo['COD_PRODUTO'][i]) for i in similar_indexes]
             results[rows['COD_PRODUTO']] = similar_items[1:]
             
-        return result[code]
+        return results[code]

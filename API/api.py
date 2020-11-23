@@ -35,16 +35,26 @@ def recommendations():
     return output.to_json(), 200
 
 # - Lista recomendações para um dado cliente
-@app.route('/get_recommendations/<string:user_id, string:product_id>', methods=['GET'])
-def recom_per_user(user_id, product_id):    
-    if(user_id != None and product_id == None):
+@app.route('/get_recommendations/', methods=['GET'])
+def recom_per_user():    
+    user_id = request.args.get('user_id', None)
+    product_id = request.args.get('product_id', None)
+    if(user_id != None):
         output = pd.read_csv('output.csv', sep = ";")
         index = output[output['COD_CLIENTE']==user_id].index.values
-        client_recom = output[output.index == index[0]]     
-        return client_recom.to_json(), 200
+        client_recom = str(output[output.index == index[0]].recommendedProducts[0])
+        if(product_id == None):
+            client_recom = json.dumps(client_recom.split("|"))
+            return client_recom, 200
+        else:
+            product_id = int(product_id)
+            product_recom = cart_recom.get_products_to_recommend(product_id)        
+            output = client_recom + product_recom
+            return output.to_json(), 200
     elif(user_id == None and product_id != None):
+        product_id = int(product_id)
         product_recom = cart_recom.get_products_to_recommend(product_id)
-        return product_recom.to_json(), 200
+        return product_recom.to_json(), 200        
     else:
         return jsonify({'error':'Não há como gerar recomendações sem um produto ou cliente.'}), 404
 
@@ -111,4 +121,4 @@ def add_purchase():
 
 
 if __name__ == '__main__':
-    app.run(host = "0.0.0.0", port = 3001, debug = True)
+    app.run()
