@@ -39,24 +39,26 @@ def recommendations():
 def recom_per_user():    
     user_id = request.args.get('user_id', None)
     product_id = request.args.get('product_id', None)
+    recommendations = {'CLIENT' : '', 'PRODUCT' : ''}
     if(user_id != None):
         output = pd.read_csv('output.csv', sep = ";")
         index = output[output['COD_CLIENTE']==user_id].index.values
-        client_recom = str(output[output.index == index[0]].recommendedProducts[0])
-        if(product_id == None):
-            client_recom = json.dumps(client_recom.split("|"))
-            return client_recom, 200
+        client_recom = output[output.index == index[0]].recommendedProducts.values[0].split('|')   
+        recommendations['CLIENT'] = client_recom
+        if(product_id == None):                                  
+            return json.dumps(recommendations), 200
         else:
             product_id = int(product_id)
             product_recom = cart_recom.get_products_to_recommend(product_id)        
-            output = client_recom + product_recom
-            return output.to_json(), 200
+            recommendations['PRODUCT'] = product_recom
+            return json.dumps(recommendations), 200
     elif(user_id == None and product_id != None):
         product_id = int(product_id)
         product_recom = cart_recom.get_products_to_recommend(product_id)
-        return product_recom.to_json(), 200        
+        recommendations['PRODUCT'] = product_recom
+        return json.dumps(recommendations), 200        
     else:
-        return jsonify({'error':'Não há como gerar recomendações sem um produto ou cliente.'}), 404
+        return jsonify({'error':'Não há como gerar recomendações sem um produto ou cliente.'}), 406
 
 
 # - Lista produtos semelhantes aos recomendados para o cliente
@@ -99,7 +101,7 @@ def product_recom_count(product_id):
 @app.route('/retrain', methods=['GET'])
 def retrain():
     status = retrain_recom.retrain_model()
-    return status, 201
+    return status, 200
 
 # ************************************************************** #
 # *********************** MÉTODOS POST ************************* #

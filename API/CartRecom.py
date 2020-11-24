@@ -59,7 +59,7 @@ class CartRecom():
           similarity_dict[key] = sum(similarity_dict[key])/2
 
         recommended_products = sorted(similarity_dict.items(), key=lambda x: x[1], reverse = True)
-        recommended_products = [lis[0] for lis in recommended_products] 
+        recommended_products = [str(lis[0]) for lis in recommended_products] 
         return recommended_products[:10]
     
     def get_products_list(self, code, products):
