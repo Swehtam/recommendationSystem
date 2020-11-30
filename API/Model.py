@@ -10,8 +10,10 @@ class Model:
     print("ABRIU MODEL.PY")
     
     def matrix_normalization(self,db):
+        db.QUANTIDADE = db.QUANTIDADE.astype('int32')
         df_matrix = pd.pivot_table(db, values = 'QUANTIDADE', index = 'COD_CLIENTE', columns = 'COD_PRODUTO')
         df_matrix_norm = (df_matrix-df_matrix.min())/(df_matrix.max()-df_matrix.min())
+        del df_matrix
         return df_matrix_norm
 
     def data_input_creation(self,df_matrix_norm):

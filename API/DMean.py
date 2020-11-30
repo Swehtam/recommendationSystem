@@ -66,7 +66,7 @@ class DMean():
         for index,rows in df_class_cliente.iterrows():
             classif = rows['CLASSIFICACAO']
             print("classificacao: " + classif)
-            d_mean = self.get_d_mean_classif(classif, df_class_cliente)
+            d_mean = self.get_d_mean_classif(classif, df_compras)
             df_class_cliente.loc[[index], 'D_MEDIA'] = d_mean
 
         #Salvar os novos valores tanto no pickle quanto na variavel

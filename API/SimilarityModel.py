@@ -4,6 +4,7 @@ import pandas as pd
 from sklearn.metrics.pairwise import cosine_similarity
 from scipy.sparse import csr_matrix
 import pickle
+import numpy as np
 
 class SimilarityModel():
     sim_results = None

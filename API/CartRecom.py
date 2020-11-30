@@ -12,7 +12,6 @@ nltk.download('stopwords')
 nltk.download('rslp')
 
 similarityModel = SimilarityModel()
-
 class CartRecom():
     df_compras = None
     df_products = None
@@ -26,7 +25,11 @@ class CartRecom():
         
         db_copy = self.df_compras.copy()
         db_copy['DUMMY'] = 1
-        self.df_matrix_u_c = pd.pivot_table(db_copy, values = 'DUMMY', index = 'COD_CLIENTE', columns = 'CLASSIFICACAO', fill_value=0)
+        self.df_matrix_u_c = pd.pivot_table(db_copy,
+                                            values = 'DUMMY', 
+                                            index = 'COD_CLIENTE',
+                                            columns = 'CLASSIFICACAO', 
+                                            fill_value=0)
         self.df_matrix_u_c = self.df_matrix_u_c.T
         
         stopwords = nltk.corpus.stopwords.words('portuguese')
@@ -37,11 +40,17 @@ class CartRecom():
         stopwords.extend(["produto"])
     
     #Chamar na API quando for retreinar
-    def create_matrix_u_c(self):
+    def create_matrix_u_c(self, df_compras):
         db_copy = self.df_compras.copy()
         db_copy['DUMMY'] = 1
-        self.df_matrix_u_c = pd.pivot_table(db_copy, values = 'DUMMY', index = 'COD_CLIENTE', columns = 'CLASSIFICACAO', fill_value=0)
+        self.df_matrix_u_c = pd.pivot_table(db_copy, 
+                                            values = 'DUMMY', 
+                                            index = 'COD_CLIENTE', 
+                                            columns = 'CLASSIFICACAO', 
+                                            fill_value=0)
         self.df_matrix_u_c = self.df_matrix_u_c.T
+        matrix_u_c = self.df_matrix_u_c.copy()
+        return matrix_u_c
         
     def get_products_to_recommend(self, code, max_recom=3):
         products = similarityModel.get_products_recom_array(code, max_recom, self.df_compras)
