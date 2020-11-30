@@ -11,6 +11,7 @@ from Recommendation import Recommendation
 from Description import Description
 from Scrapper import Scrapper
 from CartRecom import CartRecom
+from Bicluster.BiclusterRecom import BiclusterRecom
 
 app = Flask(__name__)
 add_product = Purchase()
@@ -18,6 +19,7 @@ retrain_recom = Recommendation()
 description = Description()
 scrap_desc = Scrapper()
 cart_recom = CartRecom()
+bicluster_recom = BiclusterRecom(retrain_recom.db_cart)
 
 # ************************************************************* #
 # *********************** MÉTODOS GET ************************* #
@@ -96,7 +98,13 @@ def product_recom_count(product_id):
         return jsonify({'error':'Não há recomendações com esse produto.'}), 404
     else:
         return jsonify(count), 200
-
+        
+# - Bicluster        
+@app.route('/recommendations/bicluster/<string:user_id>', methods=['GET'])
+def recom_bicluster_user(user_id):
+    recoms = bicluster_recom.recomenda_cliente(user_id)
+    return json.dumps(recoms)
+        
 # - Retreina o modelo
 @app.route('/retrain', methods=['GET'])
 def retrain():
