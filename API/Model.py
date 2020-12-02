@@ -10,15 +10,28 @@ class Model:
     print("ABRIU MODEL.PY")
     
     def matrix_normalization(self,db):
-        db.QUANTIDADE = db.QUANTIDADE.astype('int32')
-        df_matrix = pd.pivot_table(db, values = 'QUANTIDADE', index = 'COD_CLIENTE', columns = 'COD_PRODUTO')
+        #db.QUANTIDADE = db.QUANTIDADE.astype('int32')
+        df_matrix = pd.pivot_table(db, 
+                                   values = 'QUANTIDADE', 
+                                   index = 'COD_CLIENTE', 
+                                   columns = 'COD_PRODUTO', 
+                                   aggfunc = np.sum)
+        columns = list(df_matrix.columns)
+        df_matrix[columns] = df_matrix[columns].astype('float16')
         df_matrix_norm = (df_matrix-df_matrix.min())/(df_matrix.max()-df_matrix.min())
+        columns = list(df_matrix_norm.columns)
+        df_matrix_norm[columns] = df_matrix_norm[columns].astype('float16')
         del df_matrix
+        del columns
         return df_matrix_norm
 
     def data_input_creation(self,df_matrix_norm):
         # create a table for input to the modeling
+        columns = list(df_matrix_norm.columns)
+        df_matrix_norm[columns] = df_matrix_norm[columns].astype('float16')
         data_input = df_matrix_norm.reset_index()
+        del columns
+        del df_matrix_norm
         data_input.index.names = ['FREQ_COMPRAS']
         data_norm = pd.melt(data_input, id_vars=['COD_CLIENTE'],
                             value_name='FREQ_COMPRAS')

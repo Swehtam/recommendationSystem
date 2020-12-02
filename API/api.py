@@ -102,8 +102,9 @@ def product_recom_count(product_id):
 # - Bicluster        
 @app.route('/recommendations/bicluster/<string:user_id>', methods=['GET'])
 def recom_bicluster_user(user_id):
-    recoms = bicluster_recom.recomenda_cliente(user_id)
-    return json.dumps(recoms)
+    recoms = {'BICLUSTER' : ''}
+    recoms['BICLUSTER'], return_code = bicluster_recom.recomenda_cliente(user_id)
+    return json.dumps(recoms), return_code
         
 # - Retreina o modelo
 @app.route('/retrain', methods=['GET'])

@@ -23,8 +23,10 @@ class Recommendation:
     
     def __init__(self):
         self.db_cart = pd.read_csv('dados_vendas.csv', sep = ';')
+        self.db_cart.CLASSIFICACAO = self.db_cart.CLASSIFICACAO.apply(lambda x : x.strip())
         self.matrix_u_c = cartRecom.create_matrix_u_c(self.db_cart)
         self.db_purchase = pd.read_csv('data_armz.csv', sep = ';')
+        self.db_purchase.QUANTIDADE = self.db_purchase.QUANTIDADE.astype('int16')
         self.df_matrix = self.create_user_classif_matrix(self.db_cart)
         self.classif_dict = pickle.load(open("classif_dict.pickle", "rb"))
         

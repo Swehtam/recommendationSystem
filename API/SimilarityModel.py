@@ -32,6 +32,8 @@ class SimilarityModel():
         cos_similarity = cosine_similarity(matrix_u_c_compressed)
 
         matrix_u_c_index = matrix_u_c.copy().reset_index()
+        # Retirando espaços vazios do início e do fim da categoria
+        #matrix_u_c_index.CLASSIFICACAO = matrix_u_c_index.CLASSIFICACAO.apply(lambda x : x.strip())
         results = {} 
         for index,rows in matrix_u_c_index.iterrows():
             #Se for True então deixa a classificacao pra ser recomendada

@@ -4,15 +4,15 @@ import pandas as pd
 import pickle
 
 class DMean():
-    classif_dict = None
+    class_dict = None
     df_class_cliente = None
     
     def __init__(self):
         self.df_class_cliente = pickle.load(open("df_class_cliente.pickle", "rb"))
-        self.classif_dict = pickle.load(open("classif_dict.pickle", "rb"))
+        self.class_dict = pickle.load(open("classif_dict.pickle", "rb"))
     
     def get_classif_dict(self):
-        return classif_dict
+        return self.class_dict
         
     def get_media_sum_cliente(self, df_class_cliente):
         media_sum = 0
@@ -71,7 +71,7 @@ class DMean():
 
         #Salvar os novos valores tanto no pickle quanto na variavel
         self.df_class_cliente = df_class_cliente
-        pickle.dump(df_class_cliente, open("/pickle/df_class_cliente.pickle", "wb"))
+        pickle.dump(df_class_cliente, open("df_class_cliente.pickle", "wb"))
         
         #Por ultimo, chamar a fun??o para cirar o novo dicionario depois de criar uma nova df de classificacao
         self.classif_dict()
@@ -89,5 +89,5 @@ class DMean():
             else:
                 classif_dict[rows['CLASSIFICACAO']] = False
 
-        self.classif_dict = classif_dict
-        pickle.dump(classif_dict, open("/pickle/classif_dict.pickle", "wb"))
+        self.class_dict = classif_dict
+        pickle.dump(classif_dict, open("classif_dict.pickle", "wb"))
