@@ -9,7 +9,7 @@
 
 using namespace std;
 
-Solution *execute_metaheuristic(Bigraph *bg, int num_iter)
+Solution *execute_metaheuristic(Bigraph *bg, int num_exec, int num_iter)
 {
    struct timeval tempoAntes, ta;
    struct timeval tempoDepois, td;
@@ -26,7 +26,7 @@ Solution *execute_metaheuristic(Bigraph *bg, int num_iter)
    gettimeofday(&tempoAntes,NULL);
    srand(time(NULL));
    Solution *solBest = NULL;
-   for(int i=0;i<N_EXEC;i++)
+   for(int i=0; i<num_exec; ++i)
    {
       Solution* sol = NULL;
       if(i % 2 == 0)
@@ -55,7 +55,7 @@ Solution *execute_metaheuristic(Bigraph *bg, int num_iter)
    tempo_medio_grasp = calculaTempo(&tempoAntes, &tempoDepois)/N_EXEC;
    media_grasp /= N_EXEC;
 
-   cout << "Min_grasp: " << min_grasp << " Media: " << media_grasp << " TempoMed: " << tempo_medio_grasp << endl; 
+   //cout << "Min_grasp: " << min_grasp << " Media: " << media_grasp << " TempoMed: " << tempo_medio_grasp << endl; 
    return solBest;
 }
 
@@ -79,7 +79,7 @@ Solution* GRASP::grasp_vns(int n_iter)
       sol_vns->forceJoin();
       //printf("VNS: %lu\n", sol_vns->edit);
 
-      if(sol_vns == NULL)
+     if(sol_vns == NULL)
       {
 	 continue;
       }

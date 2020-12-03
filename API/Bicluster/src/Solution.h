@@ -6,7 +6,7 @@
 #include <set>
 #include <string>
 
-#include "Edge.h"
+//#include "Edge.h"
 #include "Bicluster.h"
 
 using namespace std; 

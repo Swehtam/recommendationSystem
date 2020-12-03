@@ -17,7 +17,7 @@
 
 #define N_EXEC 2
 
-Solution *execute_metaheuristic(Bigraph *bg, int num_iter);
+Solution *execute_metaheuristic(Bigraph *bg, int num_exec, int num_iter);
 
 class GRASP{
 

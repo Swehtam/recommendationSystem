@@ -9,6 +9,7 @@
 
 #include "FileBigraph.h"
 #include "Biclusterizer.h"
+#include "BiclusterParameter.h"
 
 using namespace std;
 
@@ -27,8 +28,8 @@ Biclusterizer *FileBigraph::loadFile(char *fileName)
    Instancia >> V;
    Instancia >> U;
    
-   printf("ORI V: %d \n", V);
-   printf("ORI U: %d \n", U);
+   //printf("ORI V: %d \n", V);
+   //printf("ORI U: %d \n", U);
 
    //Lista de Adjacencia original
    vector<vector<int>> laV(V);
@@ -68,24 +69,24 @@ Biclusterizer *FileBigraph::loadFile(char *fileName)
    vector<bool> isFiltredU(U, false);
    //Criando o grafo filtrada
    Biclusterizer *bcb = new Biclusterizer(V, U);
-   printf("V: %d \n", bcb->V);
-   printf("U: %d \n", bcb->U);
+   //printf("V: %d \n", bcb->V);
+   //printf("U: %d \n", bcb->U);
 
    for(int v=0; v < V; ++v)
    {
-      if(laV[v].size() <= 1)
+      if(laV[v].size() < BiclusterParameter::MIN_BUY)
 	 isFiltredV[v] = true;
    }
    
    for(int u=0; u < U; ++u)
    {
-      if(laU[u].size() > 200)
+      if(laU[u].size() > BiclusterParameter::OUTLIER_PRODUCT)
       {
 	 isFiltredU[u] = true;
 	 bcb->outliersProducts.push_back(std::make_pair(u, laU[u]));
       }
       
-      if(laU[u].size() <= 1)
+      if(laU[u].size() < BiclusterParameter::MIN_BUY)
 	 isFiltredU[u] = true;
    }
 

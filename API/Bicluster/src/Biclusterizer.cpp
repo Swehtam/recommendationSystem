@@ -1,4 +1,5 @@
 #include "Bicluster.h"
+#include "BiclusterParameter.h"
 #include "Biclusterizer.h"
 #include "GRASP.h"
 #include <queue>
@@ -6,19 +7,28 @@
 #include <iostream>
 
 using namespace std;
+      
+int BiclusterParameter::MIN_BUY = 2;
+int BiclusterParameter::OUTLIER_PRODUCT = 200;
+float BiclusterParameter::OUTLIER_PORC_CLIENTS = 0.25;
+int BiclusterParameter::MIN_SHAPE_COMPONENT = 2;
+int BiclusterParameter::MAX_DIST_COMPONENT = 3;
+int BiclusterParameter::NUM_ITER_METAHEURISTIC = 30;
+int BiclusterParameter::NUM_EXEC_METAHEURISTIC = 2;
    
 void Biclusterizer::addOutliers()
 {
    for(pair<int, vector<int>> &product : this->outliersProducts)
    {
       vector<bool>isClient(this->V, false);
-      for(int v : product.second)
+      for(int v : product.second) //product.second possui a lista de cliente que compram este produto considerado outlier
       {
 	 isClient[v] = true;
       }
 
-      //Contabiliza quantos clientes do outlier estão no biclique
-      //Se passar da metade adiciona o outlier na biclique
+      //Contabiliza quantos clientes do produto outlier estão na biclique (numClients)
+      //Se numClients for maior que a porcentagem OUTLIER_PORC_CLIENTS dos clientes desta biclique 
+      //então adiciona o outlier na biclique
       for(Biclique *bc : this->bicliques)
       {
 	 if(bc->V.size() < 2)
@@ -29,7 +39,7 @@ void Biclusterizer::addOutliers()
 	    if(isClient[v])
 	       ++numClients;
 	 }
-	 if(numClients > (bc->V.size()/4))
+	 if(numClients > (bc->V.size() * BiclusterParameter::OUTLIER_PORC_CLIENTS))
 	 {
 	    //printf("Biclique: %d - V: %d - Cli: %d\n", product.first, bc->V.size(), numClients);
 	    bc->U.push_back(product.first);
@@ -42,8 +52,8 @@ void Biclusterizer::addOutliers()
 
 void Biclusterizer::optBicluster(vector<int> &compV, vector<int> &compU)
 {
-	 printf("V - %d \n", compV.size());
-	 printf("U - %d \n", compU.size());
+	 //printf("V - %d \n", compV.size());
+	 //printf("U - %d \n", compU.size());
 
    vector<int> mapInvV;
    vector<int> mapInvU;
@@ -83,15 +93,17 @@ void Biclusterizer::optBicluster(vector<int> &compV, vector<int> &compU)
    bg.init();
 
    //Executando o otimizador
-   Solution *sol = execute_metaheuristic(&bg, 30);
+   Solution *sol = execute_metaheuristic(&bg, 
+	 				 BiclusterParameter::NUM_EXEC_METAHEURISTIC,
+	 				 BiclusterParameter::NUM_ITER_METAHEURISTIC);
 
    //cout << sol->getText() << endl << endl;
 
    //Adicionando biclusters não singleton
    for(Bicluster *bclu : sol->C)
    {
-      if(bclu->U.size() < 5)
-	 printf("IIIIIIIIIIIIIIIOOOOOOOOOOOOOOOOOOOOOOOOOO");
+      //if(bclu->U.size() < 5)
+	 //printf("IIIIIIIIIIIIIIIOOOOOOOOOOOOOOOOOOOOOOOOOO");
       if((bclu->V.size() > 0) && (bclu->U.size() > 0))
       {
 	 //Mapeando os bicluster e depois adicionando o biclique no conjunto final
@@ -178,7 +190,7 @@ void Biclusterizer::divide(vector<int> &oriV, vector<int> &oriU, int dist)
 	 //Descarta singleton
 	 if((compV.empty()) || (compU.empty()))
 	    continue;
-	 printf("Comp: %d\n", i);
+	 //printf("Comp: %d\n", i);
 	 this->optBicluster(compV, compU);
 
       }//FIM IF
@@ -240,8 +252,8 @@ void Biclusterizer::start()
 	       break;
 	 }
 
-	 if(compV.size() > 2 && compU.size() > 2)
-	    this->divide(compV, compU, 3);
+	 if(compV.size() > BiclusterParameter::MIN_SHAPE_COMPONENT && compU.size() > BiclusterParameter::MIN_SHAPE_COMPONENT)
+	    this->divide(compV, compU, BiclusterParameter::MAX_DIST_COMPONENT);
 	 else
 	 {
 	    Biclique *bc = new Biclique();

@@ -18,16 +18,20 @@ class BiclusterRecom():
     clientes_cluster = None
     produtos_cluster = None
     biclusters = None
+    #Variavel de teste para retreino
+    teste = None
     
-    def __init__(self, df_compras):
+    def __init__(self):
         #Chamar o metodo para pegar o arquivo adjacency list
         outputname= "Bicluster/Adjacency_list.txt"
-        self.get_adjacency_list(outputname, df_compras)
+        self.get_adjacency_list(outputname)
         
         self.get_biclusters()
         
+        self.teste = 1
+        
     #Função para atualizar os valores das variaveis quando iniciar essa classe
-    def get_adjacency_list(self, txt_file_name, df_compras):
+    def get_adjacency_list(self, txt_file_name):
         if (path.exists(txt_file_name)):
             text_file = open(txt_file_name, mode="r", encoding='utf-8')
             self.n_clientes = int(text_file.readline())
@@ -36,9 +40,6 @@ class BiclusterRecom():
             self.revert_cliente = pickle.load( open( "Bicluster/pickle/revert_cliente.pickle", "rb" ) )
             self.convert_produto = pickle.load( open( "Bicluster/pickle/convert_produto.pickle", "rb" ) )
             self.revert_produto = pickle.load( open( "Bicluster/pickle/revert_produto.pickle", "rb" ) )
-        
-        else:
-            self.create_adjacency_list(df_compras, df_compras)
     
     #Função para criar ou pegar um bicluster do banco de dados
     def get_biclusters(self):
@@ -46,9 +47,6 @@ class BiclusterRecom():
             self.biclusters = pickle.load( open( "Bicluster/pickle/biclusters.pickle", "rb" ) )
             self.clientes_cluster = pickle.load( open( "Bicluster/pickle/clientes_cluster.pickle", "rb" ) )
             self.produtos_cluster = pickle.load( open( "Bicluster/pickle/produtos_cluster.pickle", "rb" ) )
-        
-        else:
-            self.create_biclusters()
         
     #Recomenda produtos pro cliente, entrada cod_cliente
     def recomenda_cliente(self, cliente):
@@ -92,6 +90,8 @@ class BiclusterRecom():
     def create_biclusters(self):
         #Pega a saida em txt e faz a separação
         out = self.execute_terminal_command()
+        
+        print("\nCriando tabela de Bicluster...")
         f = out.decode("utf-8").split('\n')[-1]
         nonnumbers=['(',')','}',']']
         text=f.split('}')
@@ -128,6 +128,8 @@ class BiclusterRecom():
         pickle.dump(self.clientes_cluster, open("Bicluster/pickle/clientes_cluster.pickle", "wb"))
         pickle.dump(self.produtos_cluster, open("Bicluster/pickle/produtos_cluster.pickle", "wb"))
         pickle.dump(self.biclusters, open("Bicluster/pickle/biclusters.pickle", "wb"))
+        
+        self.teste = 2
     
     #Cria a lista adjacente e criar o arquivo txt
     def create_adjacency_list(self, df_compras):
@@ -164,9 +166,9 @@ class BiclusterRecom():
         pickle.dump(self.revert_produto, open("Bicluster/pickle/revert_produto.pickle", "wb"))
             
         #Criar lista de adjacencia
-        lista_adj=[[] for x in range(n_clientes)] #Inicialização da lista de adjacência
+        lista_adj=[[] for x in range(self.n_clientes)] #Inicialização da lista de adjacência
         for index,row in df.iterrows():
-            lista_adj[convert_cliente[row[0]]].append(convert_produto[row[1]])
+            lista_adj[self.convert_cliente[row[0]]].append(self.convert_produto[row[1]])
         
         #Escrever lista em arquivo txt
         outputname= "Adjacency_list.txt"
@@ -194,13 +196,15 @@ class BiclusterRecom():
     #Metodo com os comandos para serem executados no terminal
     def execute_terminal_command(self):
         # Primeiro é necessario compilar os arquivos em C++ do professor Gilberto
-        cmd = 'g++ -o Bicluster/ARMPB Bicluster/src/*.cpp'   # arbitrary external command, e.g. "python mytest.py"
+        print("\nCompilando codigo do Bicluster...")
+        cmd = 'g++ -o Bicluster/bc Bicluster/src/*.cpp'   # arbitrary external command, e.g. "python mytest.py"
         exitcode, out, err = self.get_exitcode_stdout_stderr(cmd)
         #Comando para rodar o bicluster
         
-        cmd = 'chmod 755 Bicluster/ARMPB'
+        cmd = 'chmod 755 Bicluster/bc'
         exitcode, out, err = self.get_exitcode_stdout_stderr(cmd)
         
-        cmd = 'Bicluster/ARMPB Bicluster/Adjacency_list.txt'
+        print("\nExecução do codigo em C++ do Bicluster...")
+        cmd = 'Bicluster/bc Bicluster/Adjacency_list.txt 1 200 0.25 3 2 30 2'
         exitcode, out, err = self.get_exitcode_stdout_stderr(cmd)
         return out
