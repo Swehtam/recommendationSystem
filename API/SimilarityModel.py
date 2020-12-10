@@ -12,8 +12,8 @@ class SimilarityModel():
     def __init__(self):
         self.sim_results = pickle.load( open( "cosine_sim_matrix.pickle", "rb" ) )
         
-        
     def save_matrix(self, cosine_sim_matrix):
+        self.sim_results = cosine_sim_matrix
         pickle.dump(cosine_sim_matrix, open("cosine_sim_matrix.pickle", "wb"))
 
     #Lembrar de pensar na melhor forma de passar esse 'classif_dict', por exemplo,

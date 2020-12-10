@@ -18,7 +18,7 @@ add_product = Purchase()
 retrain_recom = Recommendation()
 description = Description()
 scrap_desc = Scrapper()
-cart_recom = CartRecom()
+cart_recom = CartRecom(retrain_recom.db_cart)
 bicluster_recom = BiclusterRecom()
 
 # ************************************************************* #
@@ -109,9 +109,7 @@ def recom_bicluster_user(user_id):
 # - Retreina o modelo
 @app.route('/retrain', methods=['GET'])
 def retrain():
-    print(bicluster_recom.teste)
-    status = retrain_recom.retrain_model(bicluster_recom)
-    print(bicluster_recom.teste)
+    status = retrain_recom.retrain_model(bicluster_recom, cart_recom)
     return status, 200
 
 # ************************************************************** #

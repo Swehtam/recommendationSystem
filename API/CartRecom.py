@@ -1,6 +1,7 @@
 #!/usr/bin/env python3.6.9
 # -*- coding: utf-8 -*-
 from SimilarityModel import SimilarityModel
+from DMean import DMean
 import pandas as pd
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity, linear_kernel
@@ -12,25 +13,17 @@ nltk.download('stopwords')
 nltk.download('rslp')
 
 similarityModel = SimilarityModel()
+dMean = DMean()
+
 class CartRecom():
     df_compras = None
     df_products = None
     df_matrix_u_c = None
     stopwords = None 
     
-    def __init__(self): 
-        self.df_compras = pd.read_csv('dados_vendas.csv', sep = ';')
-        self.df_compras.CLASSIFICACAO = self.df_compras.CLASSIFICACAO.apply(lambda x : x.strip())
+    def __init__(self, df_compras): 
+        self.df_compras = df_compras
         self.df_products = pd.read_csv('df_product.csv', sep = ';')
-        
-        db_copy = self.df_compras.copy()
-        db_copy['DUMMY'] = 1
-        self.df_matrix_u_c = pd.pivot_table(db_copy,
-                                            values = 'DUMMY', 
-                                            index = 'COD_CLIENTE',
-                                            columns = 'CLASSIFICACAO', 
-                                            fill_value=0)
-        self.df_matrix_u_c = self.df_matrix_u_c.T
         
         stopwords = nltk.corpus.stopwords.words('portuguese')
         stopwords.extend(["nao", "...", "[", ']'])
@@ -38,10 +31,18 @@ class CartRecom():
         stopwords.extend(["qualquer"])
         stopwords.extend(["descrição"])
         stopwords.extend(["produto"])
+        
+    #Metodo para pegar a instancia de D_MEAN
+    def get_d_mean(self):
+        return dMean
+        
+    #Metodo para pegar a instancia de SimilarityModel
+    def get_similarityModel(self):
+        return similarityModel
     
     #Chamar na API quando for retreinar
     def create_matrix_u_c(self, df_compras):
-        db_copy = self.df_compras.copy()
+        db_copy = df_compras.copy()
         db_copy['DUMMY'] = 1
         self.df_matrix_u_c = pd.pivot_table(db_copy, 
                                             values = 'DUMMY', 
@@ -54,7 +55,6 @@ class CartRecom():
         
     def get_products_to_recommend(self, code, max_recom=3):
         products = similarityModel.get_products_recom_array(code, max_recom, self.df_compras)
-        print(self.df_compras[self.df_compras.COD_PRODUTO == 25756].CLASSIFICACAO)
         products_codes = self.get_products_list(code, products)
         purchase_similarity = self.purchase_similarity_recom(products_codes, code)
         description_similarity = self.description_similarity_recom(products_codes, code)

@@ -7,7 +7,6 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 
 class Model:
-    print("ABRIU MODEL.PY")
     
     def matrix_normalization(self,db):
         #db.QUANTIDADE = db.QUANTIDADE.astype('int32')
