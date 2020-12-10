@@ -34,13 +34,13 @@ class Recommendation:
         return df_matrix
 
     def retrain_model(self, bicluster_recom, cart_recom):
-        '''# - Retrain Bicluster
+        # - Retrain Bicluster
         print("\nTreinando recomendações do bicluster...") 
         print("\nCriando tabela de adjacencia...")
         bicluster_recom.create_adjacency_list(self.db_cart)
         print("\nTreinando o Bicluster...")
         bicluster_recom.execute_terminal_command()
-        print("\nTreinamento finalizado...")'''
+        print("\nTreinamento finalizado...")
         
         # - Retrain Add To Cart:
         print("\nTreinando recomendações do carrinho...")   
@@ -54,7 +54,7 @@ class Recommendation:
         similarityModel = cart_recom.get_similarityModel()
         similarityModel.create_cosine_similarity_matrix(matrix_u_c, classif_dict)
         
-        ''' # - Retrain Purchased Based:
+         # - Retrain Purchased Based:
         # variables to define field names:
         # CHANGE TO READ THE PROVIDED DATA     
         db = self.db_purchase        
@@ -72,5 +72,5 @@ class Recommendation:
         print("\nTreinando recomendações de compras...")
         recom = model.recom_model(train_data, user_id, item_id, users_to_recommend, n_rec)
         print("\nAtualizando informações de recomendações...")
-        df_output = model.create_output(recom, user_id, item_id, users_to_recommend, n_rec, print_csv=True)'''
+        df_output = model.create_output(recom, user_id, item_id, users_to_recommend, n_rec, print_csv=True)
         return ("Recomendações atualizadas.")
