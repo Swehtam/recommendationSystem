@@ -1,0 +1,62 @@
+#!/usr/bin/env python3.6.9
+# -*- coding: utf-8 -*- 
+
+import pandas as pd 
+from requests import get
+from tqdm import tqdm
+import re
+import html
+
+class ExtractDescription():
+
+    # HTML Dictionary to delete some "unnecessary" entities
+    htmlEntities = {
+        '\xa0': ' ',
+        '\\\\n': '',
+        '&bull;': '',
+        '&trade;': '',
+        '&reg;': '',
+        '&sup1;': '',
+        '&sup2;': '',
+        '&sup3;': ''
+    }
+    
+    def create_df_product(self):
+        # PEGAR OS DADOS QUE ESTÃO DENTRO DO BANCO DE DADOS
+        db = pd.read_csv('dados_vendas.csv', sep=';')
+        db = db[['COD_PRODUTO', 'NOME_PRODUTO']].copy()
+        data = db.drop_duplicates(ignore_index=True)
+
+        print("Iniciando extração das descrições...")
+        # Extracting description from api 
+        descriptions = []
+        for product in tqdm(data.CODE):
+            # Create url string to get products long Description
+            url = 'https://www.armazempb.com.br/ccstoreui/v1/products/0' + str(product) + '?fields=longDescription'
+            # Get text from the url
+            text = get(url).text.encode('utf-8')
+            # Set it to string, 'cause sometime it comes as "bytes" object
+            text = str(text)
+            # Get only the text that's between '>' and '<'
+            match = re.findall(">(.*?)<", text)
+            # Concatenate all string into one
+            result = ""
+            for string in match:
+                result = result + string
+                
+            # Translate HTML Entities to string
+            unescape_result = html.unescape(result)
+            #For each entities on the dictonary replace the patterns with "" for each product
+            for entities in htmlEntities:
+                unescape_result = unescape_result.replace(entities, htmlEntities[entities])
+                
+            # Append the result on the descriptions list
+            descriptions.append(unescape_result)     
+
+        # Add descriptions into the descriptions columns
+        data['DESCRIPTION'] = descriptions   
+        # Exporting test data table to csv
+        # COLOCAR ESSE DATAFRAME NO BD
+        data.to_csv('df_product.csv', sep=';')
+
+        print("Tudo pronto!")

@@ -12,14 +12,20 @@ from Description import Description
 from Scrapper import Scrapper
 from CartRecom import CartRecom
 from Bicluster.BiclusterRecom import BiclusterRecom
+from BdManagement import BdManagement
 
 app = Flask(__name__)
+
+
 add_product = Purchase()
 retrain_recom = Recommendation()
 description = Description()
 scrap_desc = Scrapper()
 cart_recom = CartRecom(retrain_recom.db_cart)
 bicluster_recom = BiclusterRecom()
+bd_manager = BdManagement()
+output = None
+
 
 # ************************************************************* #
 # *********************** MÉTODOS GET ************************* #
@@ -64,7 +70,7 @@ def recom_per_user():
 
 
 # - Lista produtos semelhantes aos recomendados para o cliente
-@app.route('/recommendations/desc/<string:user_id>', methods=['GET'])
+'''@app.route('/recommendations/desc/<string:user_id>', methods=['GET'])
 def recom_desc_user(user_id):
     output = pd.read_csv('output.csv', sep = ";")
     index = output[output['COD_CLIENTE']==user_id].index.values
@@ -73,7 +79,8 @@ def recom_desc_user(user_id):
     else:
         recoms = description.list_recom(output, user_id)
         return recoms.to_json(), 200
-    
+'''
+
 # - Lista recomendações em que o produto aparece
 @app.route('/recommendations/product/<string:product_id>', methods=['GET'])
 def product_recom_summary(product_id):
@@ -130,6 +137,6 @@ def add_purchase():
     status = add_product.add(entry)
     return status, 201
 
-
 if __name__ == '__main__':
+    app.config['DEBUG'] = True
     app.run()
