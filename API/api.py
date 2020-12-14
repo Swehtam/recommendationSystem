@@ -38,7 +38,7 @@ def home():
 # - Lista todas as recomendações
 @app.route('/recommendations', methods=['GET'])
 def recommendations():
-    output = pd.read_csv('output.csv', sep = ";")
+    output = bd_manager.getOutputRecom() #pd.read_csv('output.csv', sep = ";")
     output.set_index(['COD_CLIENTE'], inplace=False)
     return output.to_json(), 200
 
@@ -49,22 +49,28 @@ def recom_per_user():
     product_id = request.args.get('product_id', None)
     recommendations = {'CLIENT' : '', 'PRODUCT' : ''}
     if(user_id != None):
-        output = pd.read_csv('output.csv', sep = ";")
-        index = output[output['COD_CLIENTE']==user_id].index.values
-        client_recom = output[output.index == index[0]].recommendedProducts.values[0].split('|')   
-        recommendations['CLIENT'] = client_recom
-        if(product_id == None):                                  
-            return json.dumps(recommendations), 200
-        else:
-            product_id = int(product_id)
-            product_recom = cart_recom.get_products_to_recommend(product_id)        
-            recommendations['PRODUCT'] = product_recom
-            return json.dumps(recommendations), 200
+        try:
+            output = bd_manager.getOutputRecom() #pd.read_csv('output.csv', sep = ";")
+            index = output[output['COD_CLIENTE']==user_id].index.values
+            client_recom = output[output.index == index[0]].recommendedProducts.values[0].split('|')   
+            recommendations['CLIENT'] = client_recom
+            if(product_id == None):                                  
+                return json.dumps(recommendations), 200
+            else:
+                product_id = int(product_id)
+                product_recom = cart_recom.get_products_to_recommend(product_id)        
+                recommendations['PRODUCT'] = product_recom
+                return json.dumps(recommendations), 200
+        except:
+            return json.dumps("Cliente não treinado, tente outro."), 405        
     elif(user_id == None and product_id != None):
-        product_id = int(product_id)
-        product_recom = cart_recom.get_products_to_recommend(product_id)
-        recommendations['PRODUCT'] = product_recom
-        return json.dumps(recommendations), 200        
+        try:
+            product_id = int(product_id)
+            product_recom = cart_recom.get_products_to_recommend(product_id)
+            recommendations['PRODUCT'] = product_recom
+            return json.dumps(recommendations), 200       
+        except:
+            return json.dumps("Produto não treinado, tente outro."), 405 
     else:
         return jsonify({'error':'Não há como gerar recomendações sem um produto ou cliente.'}), 406
 
@@ -86,7 +92,7 @@ def recom_desc_user(user_id):
 def product_recom_summary(product_id):
     if(len(product_id) < 5):
         return jsonify({'error':'Não é um código de produto válido.'}), 404
-    output = pd.read_csv('output.csv', sep = ";")
+    output = bd_manager.getOutputRecom() #pd.read_csv('output.csv', sep = ";")
     contain_values = output[output['recommendedProducts'].str.contains(product_id)]
     if(len(contain_values) == 0):
         return jsonify({'error':'Não há recomendações com esse produto.'}), 404
@@ -98,7 +104,7 @@ def product_recom_summary(product_id):
 def product_recom_count(product_id):
     if(len(product_id) < 5):
         return jsonify({'error':'Não é um código de produto válido.'}), 404
-    output = pd.read_csv('output.csv', sep = ";")
+    output = bd_manager.getOutputRecom()
     contain_values = output[output['recommendedProducts'].str.contains(product_id)]
     count = ("Número de recomendações desse produto:", len(contain_values.index))
     if(len(contain_values) == 0):
