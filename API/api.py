@@ -38,7 +38,7 @@ def home():
 # - Lista todas as recomendações
 @app.route('/recommendations', methods=['GET'])
 def recommendations():
-    output = bd_manager.getOutputRecom() #pd.read_csv('output.csv', sep = ";")
+    output = bd_manager.getOutputRecom()
     output.set_index(['COD_CLIENTE'], inplace=False)
     return output.to_json(), 200
 
@@ -50,7 +50,8 @@ def recom_per_user():
     recommendations = {'CLIENT' : '', 'PRODUCT' : ''}
     if(user_id != None):
         try:
-            output = bd_manager.getOutputRecom() #pd.read_csv('output.csv', sep = ";")
+            output = bd_manager.getOutputRecom()
+            print("Output recebido do BD.")
             index = output[output['COD_CLIENTE']==user_id].index.values
             client_recom = output[output.index == index[0]].recommendedProducts.values[0].split('|')   
             recommendations['CLIENT'] = client_recom

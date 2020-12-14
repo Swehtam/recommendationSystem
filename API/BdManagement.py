@@ -11,8 +11,8 @@ class BdManagement:
     # - INFORMAÇÕES BANCO DE DADOS
     POSTGRES = {
         'user': os.environ.get('DATABASE_USER', None),
-        'pw': os.environ.get('DATABASE_PASS', None),
-        'db': os.environ.get('DATABASE_NAME', None),
+        'password': os.environ.get('DATABASE_PASS', None),
+        'database': os.environ.get('DATABASE_NAME', None),
         'host': os.environ.get('DATABASE_HOST', None),
         'port': os.environ.get('DATABASE_PORT', None),
     }
@@ -35,16 +35,17 @@ class BdManagement:
         conn = self.connect()
         query = """SELECT "COD_CLIENTE", "recommendedProducts" FROM output_recom;"""
         output = None
-        with conn:
-            cursor = conn.cursor
-            try:
-                output = pd.read_sql(query, conn)
-            except psycopg2.Error as e:
-                cursor.execute("rollback;")
-                print(e)
-            finally:
-                conn.close()
-        return output
+        cursor = conn.cursor()
+        try:
+            output = pd.read_sql(query, conn)
+            return output
+        except psycopg2.Error as e:
+            cursor.execute("rollback;")
+            print(e)
+        finally:
+            conn.close()
+        
+        
 
     def getSalesTable(self):
         """ Retorna a tabela de vendas do banco """
@@ -62,7 +63,7 @@ class BdManagement:
                             "CANAL" FROM vendas;"""
         data_armz = None
         with conn:
-            cursor = conn.cursor
+            cursor = conn.cursor()
             try:
                 data_armz = pd.read_sql(query, conn)
             except psycopg2.Error as e:
@@ -80,7 +81,7 @@ class BdManagement:
                             "DESCRIPTION" FROM produtos;"""
         data_products = None
         with conn:
-            cursor = conn.cursor
+            cursor = conn.cursor()
             try:
                 data_products = pd.read_sql(query, conn)
             except psycopg2.Error as e:
@@ -98,7 +99,7 @@ class BdManagement:
         query = """SELECT "COD_CLIENTE","COD_PRODUTO","QUANTIDADE" FROM vendas;"""
         data_recom = None
         with conn:
-            cursor = conn.cursor
+            cursor = conn.cursor()
             try:
                 data_recom = pd.read_sql(query, conn)
             except psycopg2.Error as e:
