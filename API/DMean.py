@@ -8,8 +8,8 @@ class DMean():
     df_class_cliente = None
     
     def __init__(self):
-        self.df_class_cliente = pickle.load(open("df_class_cliente.pickle", "rb"))
-        self.class_dict = pickle.load(open("classif_dict.pickle", "rb"))
+        self.df_class_cliente = pickle.load(open("pickle/df_class_cliente.pickle", "rb"))
+        self.class_dict = pickle.load(open("pickle/classif_dict.pickle", "rb"))
     
     def get_classif_dict(self):
         return self.class_dict
@@ -71,7 +71,7 @@ class DMean():
 
         #Salvar os novos valores tanto no pickle quanto na variavel
         self.df_class_cliente = df_class_cliente
-        pickle.dump(df_class_cliente, open("df_class_cliente.pickle", "wb"))
+        pickle.dump(df_class_cliente, open("pickle/df_class_cliente.pickle", "wb"))
         
         #Por ultimo, chamar a fun??o para cirar o novo dicionario depois de criar uma nova df de classificacao
         self.classif_dict()
@@ -90,4 +90,4 @@ class DMean():
                 classif_dict[rows['CLASSIFICACAO']] = False
 
         self.class_dict = classif_dict
-        pickle.dump(classif_dict, open("classif_dict.pickle", "wb"))
+        pickle.dump(classif_dict, open("pickle/classif_dict.pickle", "wb"))

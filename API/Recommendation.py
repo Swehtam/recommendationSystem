@@ -4,36 +4,58 @@ from Model import Model
 import pandas as pd
 import numpy as np
 import pickle
+from BdManagement import BdManagement
+from ExtractDescription import ExtractDescription
 
 model = Model()
+bd_manager = BdManagement()
+description_extractor = ExtractDescription()
 
 class Recommendation:
 
     db_cart = pd.DataFrame()
     db_purchase = pd.DataFrame()
-    df_matrix = []
+    #df_matrix = []
     
     def __init__(self):
-        self.db_cart = pd.read_csv('dados_vendas.csv', sep = ';')
+        self.db_cart = bd_manager.getSalesTable()#self.db_cart = pd.read_csv('dados_vendas.csv', sep = ';')
         self.db_cart.CLASSIFICACAO = self.db_cart.CLASSIFICACAO.apply(lambda x : x.strip())
-        self.db_purchase = pd.read_csv('data_armz.csv', sep = ';')
+        self.db_purchase = bd_manager.getClientRecomTable()#self.db_purchase = pd.read_csv('data_armz.csv', sep = ';')
         self.db_purchase.QUANTIDADE = self.db_purchase.QUANTIDADE.astype('int16')
-        self.df_matrix = self.create_user_classif_matrix(self.db_cart)
+        #self.create_user_classif_matrix()
         
-    def create_user_classif_matrix(self, df_compras):
+        ##Acho q isso nao está sendo utilizado
+'''    def create_user_classif_matrix(self, df_compras = self.db_cart):
         db_copy = df_compras.copy()
         db_copy['DUMMY'] = 1
 
-        df_matrix = pd.pivot_table(db_copy, 
+        self.df_matrix = pd.pivot_table(db_copy, 
                                    values = 'DUMMY', 
                                    index = 'COD_CLIENTE', 
                                    columns = 'CLASSIFICACAO', 
                                    fill_value=0)
-        df_matrix = df_matrix.T
-
-        return df_matrix
+        self.df_matrix = self.df_matrix.T''''
 
     def retrain_model(self, bicluster_recom, cart_recom):
+        # - Atualizar tabela de produtos no BD
+        print("\nAtualizando todas tabela encontradas no DB...")
+        print("\nAtualizando tabela de vendas...")
+        self.db_cart = bd_manager.getSalesTable()
+        self.db_cart.CLASSIFICACAO = self.db_cart.CLASSIFICACAO.apply(lambda x : x.strip())
+        cart_recom.update_df_compras(self.db_cart)
+        print("\nFinalizado!...")
+
+        print("\nAtualizando tabela para recomendação de cliente...")
+        self.db_purchase = bd_manager.getClientRecomTable()
+        self.db_purchase.QUANTIDADE = self.db_purchase.QUANTIDADE.astype('int16')
+        print("\nFinalizado!...")
+
+        print("\nAtualizando tabela de produtos no DB...")
+        description_extractor.create_df_product(self.db_cart)
+        cart_recom.update_df_products()
+        print("\nFinalizado!...")
+        print("\nAtualizações de tabelas finalizada...")
+        
         # - Retrain Bicluster
         print("\nTreinando recomendações do bicluster...") 
         print("\nCriando tabela de adjacencia...")
@@ -54,13 +76,12 @@ class Recommendation:
         similarityModel = cart_recom.get_similarityModel()
         similarityModel.create_cosine_similarity_matrix(matrix_u_c, classif_dict)
         
-         # - Retrain Purchased Based:
+        # - Retrain Purchased Based:
         # variables to define field names:
         # CHANGE TO READ THE PROVIDED DATA     
         db = self.db_purchase        
         user_id = 'COD_CLIENTE'
         item_id = 'COD_PRODUTO'
-        item_name = 'NOME_PRODUTO'
         users_to_recommend = list(db[user_id])
         n_rec = 10 # itens to recommend
         

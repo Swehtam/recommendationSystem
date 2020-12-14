@@ -5,6 +5,7 @@ from Recommendation import Recommendation
 
 class Purchase:
 
+    # ACHO QUE PODE EXCLUIR ESSA CLASSE
     def add(self, entry):
         #new_rec = Recommendation()
         df = pd.read_csv('/var/www/recommendationSystem/API/data_armz.csv', sep = ';')

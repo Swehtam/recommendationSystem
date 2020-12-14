@@ -6,6 +6,9 @@ from requests import get
 from tqdm import tqdm
 import re
 import html
+from BdManagement import BdManagement
+
+bd_manager = BdManagement()
 
 class ExtractDescription():
 
@@ -21,11 +24,10 @@ class ExtractDescription():
         '&sup3;': ''
     }
     
-    def create_df_product(self):
-        # PEGAR OS DADOS QUE ESTÃO DENTRO DO BANCO DE DADOS
-        db = pd.read_csv('dados_vendas.csv', sep=';')
-        db = db[['COD_PRODUTO', 'NOME_PRODUTO']].copy()
-        data = db.drop_duplicates(ignore_index=True)
+    #OBS.: Recebe db de vendas
+    def create_df_product(self, db_cart):
+        db_cart = db_cart[['COD_PRODUTO', 'NOME_PRODUTO']].copy()
+        data = db_cart.drop_duplicates(ignore_index=True)
 
         print("Iniciando extração das descrições...")
         # Extracting description from api 
@@ -55,8 +57,7 @@ class ExtractDescription():
 
         # Add descriptions into the descriptions columns
         data['DESCRIPTION'] = descriptions   
-        # Exporting test data table to csv
         # COLOCAR ESSE DATAFRAME NO BD
-        data.to_csv('df_product.csv', sep=';')
+        bd_manager.updateProductTable(data)#data.to_csv('df_product.csv', sep=';')
 
         print("Tudo pronto!")

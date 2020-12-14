@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 from SimilarityModel import SimilarityModel
 from DMean import DMean
+from BdManagement import BdManagement
 import pandas as pd
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity, linear_kernel
@@ -14,16 +15,17 @@ nltk.download('rslp')
 
 similarityModel = SimilarityModel()
 dMean = DMean()
+bd_manager = BdManagement()
 
 class CartRecom():
     df_compras = None
     df_products = None
-    df_matrix_u_c = None
+    #df_matrix_u_c = None #Acho que nao precisa
     stopwords = None 
     
     def __init__(self, df_compras): 
         self.df_compras = df_compras
-        self.df_products = pd.read_csv('df_product.csv', sep = ';')
+        self.df_products = bd_manager.getProductsTable()#self.df_products = pd.read_csv('df_product.csv', sep = ';')
         
         stopwords = nltk.corpus.stopwords.words('portuguese')
         stopwords.extend(["nao", "...", "[", ']'])
@@ -44,14 +46,14 @@ class CartRecom():
     def create_matrix_u_c(self, df_compras):
         db_copy = df_compras.copy()
         db_copy['DUMMY'] = 1
-        self.df_matrix_u_c = pd.pivot_table(db_copy, 
+        df_matrix_u_c = pd.pivot_table(db_copy, 
                                             values = 'DUMMY', 
                                             index = 'COD_CLIENTE', 
                                             columns = 'CLASSIFICACAO', 
                                             fill_value=0)
-        self.df_matrix_u_c = self.df_matrix_u_c.T
-        matrix_u_c = self.df_matrix_u_c.copy()
-        return matrix_u_c
+        df_matrix_u_c = df_matrix_u_c.T
+        #matrix_u_c = self.df_matrix_u_c.copy()
+        return df_matrix_u_c
         
     def get_products_to_recommend(self, code, max_recom=3):
         products = similarityModel.get_products_recom_array(code, max_recom, self.df_compras)
@@ -126,3 +128,9 @@ class CartRecom():
             results[rows['COD_PRODUTO']] = similar_items[1:]
             
         return results[code]
+
+    def update_df_products(self):
+        self.df_products = bd_manager.getProductsTable()
+
+    def update_df_compras(self, df_compras):
+        self.df_compras = df_compras

@@ -171,7 +171,7 @@ class BiclusterRecom():
             lista_adj[self.convert_cliente[row[0]]].append(self.convert_produto[row[1]])
         
         #Escrever lista em arquivo txt
-        outputname= "Adjacency_list.txt"
+        outputname= "Bicluste/Adjacency_list.txt"
         text_file = open(outputname, "w")
         text_file.write(str(self.n_clientes)+'\n')
         text_file.write(str(self.n_produtos)+'\n')

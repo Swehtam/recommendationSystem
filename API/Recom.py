@@ -7,17 +7,20 @@ from sklearn.metrics.pairwise import linear_kernel
 import nltk
 # language = portuguese
 from spacy.lang.pt.stop_words import STOP_WORDS
+from BdManagement import BdManagement
 
-class Recom:
+bd_manager = BdManagement()
+
+class Recom:    
     # Reading data
     #data = pd.read_csv("sample.csv")
     def open_file(self):
-        data = pd.read_csv('data_description.csv', sep=';')
+        data = bd_manager.getProductsTable()
+        #data = pd.read_csv('data_description.csv', sep=';')
         data = data[data['DESCRIPTION'] != '[]']
         data.reset_index(drop = True, inplace=True)
         results = self.create_similar(data)
         return results, data
-
 
     def create_similar(self, data):
         TF = TfidfVectorizer(analyzer='word', ngram_range=(1,3), min_df=0, stop_words=STOP_WORDS)
@@ -44,10 +47,3 @@ class Recom:
         for rec in recoms:
             print("Recommended: " + self.item(rec[1], data) + " with score = " + str(rec[0]))
         return recoms
-
-
-'''
-# Pegar o output de recomendação para um cliente
-    # Pegar os 10 primeiros produtos 
-    # Listar 5 produtos semelhantes por descrição para cada um dos pro
-'''

@@ -38,15 +38,14 @@ class BdManagement:
         cursor = conn.cursor()
         try:
             output = pd.read_sql(query, conn)
-            return output
         except psycopg2.Error as e:
             cursor.execute("rollback;")
             print(e)
         finally:
             conn.close()
-        
-        
-
+            
+        return output
+       
     def getSalesTable(self):
         """ Retorna a tabela de vendas do banco """
         conn = self.connect()
@@ -62,15 +61,15 @@ class BdManagement:
                             "QUANTIDADE",
                             "CANAL" FROM vendas;"""
         data_armz = None
-        with conn:
-            cursor = conn.cursor()
-            try:
-                data_armz = pd.read_sql(query, conn)
-            except psycopg2.Error as e:
-                cursor.execute("rollback;")
-                print(e)
-            finally:
-                conn.close()
+        cursor = conn.cursor()
+        try:
+            data_armz = pd.read_sql(query, conn)
+        except psycopg2.Error as e:
+            cursor.execute("rollback;")
+            print(e)
+        finally:
+            conn.close()
+            
         return data_armz
 
     def getProductsTable(self):
@@ -80,15 +79,15 @@ class BdManagement:
                             "COD_PRODUTO",
                             "DESCRIPTION" FROM produtos;"""
         data_products = None
-        with conn:
-            cursor = conn.cursor()
-            try:
-                data_products = pd.read_sql(query, conn)
-            except psycopg2.Error as e:
-                cursor.execute("rollback;")
-                print(e)
-            finally:
-                conn.close()
+        cursor = conn.cursor()
+        try:
+            data_products = pd.read_sql(query, conn)
+        except psycopg2.Error as e:
+            cursor.execute("rollback;")
+            print(e)
+        finally:
+            conn.close()
+            
         return data_products
 
     def getClientRecomTable(self):
@@ -98,91 +97,87 @@ class BdManagement:
         conn = self.connect()
         query = """SELECT "COD_CLIENTE","COD_PRODUTO","QUANTIDADE" FROM vendas;"""
         data_recom = None
-        with conn:
-            cursor = conn.cursor()
-            try:
-                data_recom = pd.read_sql(query, conn)
-            except psycopg2.Error as e:
-                cursor.execute("rollback;")
-                print(e)
-            finally:
-                conn.close()
+        cursor = conn.cursor()
+        try:
+            data_recom = pd.read_sql(query, conn)
+        except psycopg2.Error as e:
+            cursor.execute("rollback;")
+            print(e)
+        finally:
+            conn.close()
+            
         return data_recom
 
     def updateProductTable(self, df_products):
         """ Dropa a tabela de produtos e depois atualiza com as novas informações de produtos obtidas. """
         conn = self.connect()
         query_drop = """DROP TABLE IF EXISTS produtos;"""
-        with conn:
-            cursor = conn.cursor()
+        cursor = conn.cursor()
 
-            # - Drop na tabela
+        # - Drop na tabela
+        try:
+            cursor.execute(query_drop)
+            cursor.commit()
+
+            # - Update na tabela
             try:
-                cursor.execute(query_drop)
-                cursor.commit()
-
-                # - Update na tabela
-                try:
-                    engine = create_engine('postgresql+psycopg2://{user}:{pass}@{dns}:{port}/{database}'.format(self.POSTGRES['user'], self.POSTGRES['pw'],
-                                                                                                                self.POSTGRES['host'], self.POSTGRES['port'],
-                                                                                                                self.POSTGRES['db']))
-                    df_products.head(0).to_sql('produtos', engine, if_exists='replace',index=False) #truncates the table
-                    raw_conn = engine.raw_connection()
-                    cur = raw_conn.cursor()
-                    output = io.StringIO()
-                    df_products.to_csv(output, sep='\t', header=False, index=False)
-                    output.seek(0)
-                    #contents = output.getvalue() # - advindo do código base, inutil pra nós
-                    cur.copy_from(output, 'produtos', null="") # null values become ''
-                    raw_conn.commit()
-                except psycopg2.Error as e:
-                    cursor.execute("rollback;")
-                    print(e)
-                finally:
-                    raw_conn.close()
-
+                engine = create_engine('postgresql+psycopg2://{}:{}@{}:{}/{}'.format(self.POSTGRES['user'], self.POSTGRES['password'],
+                                                                                     self.POSTGRES['host'], self.POSTGRES['port'],
+                                                                                     self.POSTGRES['database']))
+                df_products.head(0).to_sql('produtos', engine, if_exists='replace',index=False) #truncates the table
+                raw_conn = engine.raw_connection()
+                cur = raw_conn.cursor()
+                output = io.StringIO()
+                df_products.to_csv(output, sep='\t', header=False, index=False)
+                output.seek(0)
+                #contents = output.getvalue() # - advindo do código base, inutil pra nós
+                cur.copy_from(output, 'produtos', null="") # null values become ''
+                raw_conn.commit()
             except psycopg2.Error as e:
                 cursor.execute("rollback;")
                 print(e)
             finally:
-                conn.close()
+                raw_conn.close()
+
+        except psycopg2.Error as e:
+            cursor.execute("rollback;")
+            print(e)
+        finally:
+            conn.close()
 
     def updateRecomTable(self, df_output):
         """ Dropa a tabela de recomendações e depois atualiza com as novas informações de recomendações para clientes obtidas. """
         conn = self.connect()
         query_drop = """DROP TABLE IF EXISTS output_recom;"""
-        with conn:
-            cursor = conn.cursor()
+        cursor = conn.cursor()
 
-            # - Drop na tabela
+        # - Drop na tabela
+        try:
+            cursor.execute(query_drop)
+            cursor.commit()
+
+            # - Update na tabela
             try:
-                cursor.execute(query_drop)
-                cursor.commit()
-
-                # - Update na tabela
-                try:
-                    engine = create_engine('postgresql+psycopg2://{user}:{pass}@{dns}:{port}/{database}'.format(self.POSTGRES['user'], self.POSTGRES['pw'],
-                                                                                                                self.POSTGRES['host'], self.POSTGRES['port'],
-                                                                                                                self.POSTGRES['db']))
-                    df_output.head(0).to_sql('output_recom', engine, if_exists='replace',index=False) #truncates the table
-                    raw_conn = engine.raw_connection()
-                    cur = raw_conn.cursor()
-                    output = io.StringIO()
-                    df_output.to_csv(output, sep='\t', header=False, index=False)
-                    output.seek(0)
-                    #contents = output.getvalue() # - advindo do código base, inutil pra nós
-                    cur.copy_from(output, 'output_recom', null="") # null values become ''
-                    raw_conn.commit()
-                except psycopg2.Error as e:
-                    cursor.execute("rollback;")
-                    print(e)
-                finally:
-                    raw_conn.close()
-
+                engine = create_engine('postgresql+psycopg2://{}:{}@{}:{}/{}'.format(self.POSTGRES['user'], self.POSTGRES['password'],
+                                                                                     self.POSTGRES['host'], self.POSTGRES['port'],
+                                                                                     self.POSTGRES['database']))
+                df_output.head(0).to_sql('output_recom', engine, if_exists='replace',index=False) #truncates the table
+                raw_conn = engine.raw_connection()
+                cur = raw_conn.cursor()
+                output = io.StringIO()
+                df_output.to_csv(output, sep='\t', header=False, index=False)
+                output.seek(0)
+                #contents = output.getvalue() # - advindo do código base, inutil pra nós
+                cur.copy_from(output, 'output_recom', null="") # null values become ''
+                raw_conn.commit()
             except psycopg2.Error as e:
                 cursor.execute("rollback;")
                 print(e)
             finally:
-                conn.close()
-        
+                raw_conn.close()
 
+        except psycopg2.Error as e:
+            cursor.execute("rollback;")
+            print(e)
+        finally:
+            conn.close()
