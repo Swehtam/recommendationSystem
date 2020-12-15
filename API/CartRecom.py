@@ -100,6 +100,7 @@ class CartRecom():
     #Modelo de recomendação por similaridade de descrição dos produtos
     def description_similarity_recom(self, products_codes, code):
         df_modelo = self.df_products[self.df_products.COD_PRODUTO.isin(products_codes)]
+        df_modelo.DESCRIPTION = df_modelo.DESCRIPTION.astype('str')
 
         df_modelo.DESCRIPTION = df_modelo.DESCRIPTION.apply(lambda x : x.lower())
         # - remove números e caracteres especiais 

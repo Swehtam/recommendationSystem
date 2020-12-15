@@ -16,7 +16,6 @@ from BdManagement import BdManagement
 
 app = Flask(__name__)
 
-
 add_product = Purchase()
 retrain_recom = Recommendation()
 description = Description()
@@ -25,7 +24,6 @@ cart_recom = CartRecom(retrain_recom.db_cart)
 bicluster_recom = BiclusterRecom()
 bd_manager = BdManagement()
 output = None
-
 
 # ************************************************************* #
 # *********************** MÉTODOS GET ************************* #
@@ -65,13 +63,13 @@ def recom_per_user():
         except:
             return json.dumps("Cliente não treinado, tente outro."), 405        
     elif(user_id == None and product_id != None):
-        try:
-            product_id = int(product_id)
-            product_recom = cart_recom.get_products_to_recommend(product_id)
-            recommendations['PRODUCT'] = product_recom
-            return json.dumps(recommendations), 200       
-        except:
-            return json.dumps("Produto não treinado, tente outro."), 405 
+        #try:
+        product_id = int(product_id)
+        product_recom = cart_recom.get_products_to_recommend(product_id)
+        recommendations['PRODUCT'] = product_recom
+        return json.dumps(recommendations), 200       
+        #except:
+         #   return json.dumps("Produto não treinado, tente outro."), 405 
     else:
         return jsonify({'error':'Não há como gerar recomendações sem um produto ou cliente.'}), 406
 
@@ -145,5 +143,5 @@ def add_purchase():
     return status, 201
 
 if __name__ == '__main__':
-    app.config['DEBUG'] = True
+    #app.config['DEBUG'] = True
     app.run()

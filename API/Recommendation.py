@@ -24,8 +24,8 @@ class Recommendation:
         self.db_purchase.QUANTIDADE = self.db_purchase.QUANTIDADE.astype('int16')
         #self.create_user_classif_matrix()
         
-        ##Acho q isso nao está sendo utilizado
-'''    def create_user_classif_matrix(self, df_compras = self.db_cart):
+    ##Acho q isso nao está sendo utilizado
+    '''def create_user_classif_matrix(self, df_compras = self.db_cart):
         db_copy = df_compras.copy()
         db_copy['DUMMY'] = 1
 
@@ -34,7 +34,7 @@ class Recommendation:
                                    index = 'COD_CLIENTE', 
                                    columns = 'CLASSIFICACAO', 
                                    fill_value=0)
-        self.df_matrix = self.df_matrix.T''''
+        self.df_matrix = self.df_matrix.T'''
 
     def retrain_model(self, bicluster_recom, cart_recom):
         # - Atualizar tabela de produtos no BD

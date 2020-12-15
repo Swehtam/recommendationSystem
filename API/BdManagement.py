@@ -42,6 +42,7 @@ class BdManagement:
             cursor.execute("rollback;")
             print(e)
         finally:
+            cursor.close()
             conn.close()
             
         return output
@@ -59,15 +60,18 @@ class BdManagement:
                             "NOME_PRODUTO",
                             "CLASSIFICACAO",
                             "QUANTIDADE",
-                            "CANAL" FROM vendas;"""
+                            "CANAL" FROM vendas_teste;"""
         data_armz = None
         cursor = conn.cursor()
         try:
             data_armz = pd.read_sql(query, conn)
+            
         except psycopg2.Error as e:
             cursor.execute("rollback;")
             print(e)
         finally:
+            conn.commit()
+            cursor.close()
             conn.close()
             
         return data_armz
@@ -82,10 +86,13 @@ class BdManagement:
         cursor = conn.cursor()
         try:
             data_products = pd.read_sql(query, conn)
+            
         except psycopg2.Error as e:
             cursor.execute("rollback;")
             print(e)
         finally:
+            conn.commit()
+            cursor.close()
             conn.close()
             
         return data_products
@@ -95,15 +102,18 @@ class BdManagement:
             a recomendação utilizando TuriCreate
         """
         conn = self.connect()
-        query = """SELECT "COD_CLIENTE","COD_PRODUTO","QUANTIDADE" FROM vendas;"""
+        query = """SELECT "COD_CLIENTE","COD_PRODUTO","QUANTIDADE" FROM vendas_teste;"""
         data_recom = None
         cursor = conn.cursor()
         try:
             data_recom = pd.read_sql(query, conn)
+            
         except psycopg2.Error as e:
             cursor.execute("rollback;")
             print(e)
         finally:
+            conn.commit()
+            cursor.close()
             conn.close()
             
         return data_recom
@@ -117,8 +127,7 @@ class BdManagement:
         # - Drop na tabela
         try:
             cursor.execute(query_drop)
-            cursor.commit()
-
+            conn.commit()
             # - Update na tabela
             try:
                 engine = create_engine('postgresql+psycopg2://{}:{}@{}:{}/{}'.format(self.POSTGRES['user'], self.POSTGRES['password'],
@@ -143,6 +152,7 @@ class BdManagement:
             cursor.execute("rollback;")
             print(e)
         finally:
+            cursor.close()
             conn.close()
 
     def updateRecomTable(self, df_output):
@@ -154,8 +164,7 @@ class BdManagement:
         # - Drop na tabela
         try:
             cursor.execute(query_drop)
-            cursor.commit()
-
+            conn.commit()
             # - Update na tabela
             try:
                 engine = create_engine('postgresql+psycopg2://{}:{}@{}:{}/{}'.format(self.POSTGRES['user'], self.POSTGRES['password'],
@@ -180,4 +189,5 @@ class BdManagement:
             cursor.execute("rollback;")
             print(e)
         finally:
+            cursor.close()
             conn.close()

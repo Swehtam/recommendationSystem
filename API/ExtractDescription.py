@@ -27,12 +27,12 @@ class ExtractDescription():
     #OBS.: Recebe db de vendas
     def create_df_product(self, db_cart):
         db_cart = db_cart[['COD_PRODUTO', 'NOME_PRODUTO']].copy()
-        data = db_cart.drop_duplicates(ignore_index=True)
+        data = db_cart.drop_duplicates(ignore_index=True).copy()
 
         print("Iniciando extração das descrições...")
         # Extracting description from api 
         descriptions = []
-        for product in tqdm(data.CODE):
+        for product in tqdm(data.COD_PRODUTO):
             # Create url string to get products long Description
             url = 'https://www.armazempb.com.br/ccstoreui/v1/products/0' + str(product) + '?fields=longDescription'
             # Get text from the url
@@ -49,15 +49,16 @@ class ExtractDescription():
             # Translate HTML Entities to string
             unescape_result = html.unescape(result)
             #For each entities on the dictonary replace the patterns with "" for each product
-            for entities in htmlEntities:
-                unescape_result = unescape_result.replace(entities, htmlEntities[entities])
+            for entities in self.htmlEntities:
+                unescape_result = unescape_result.replace(entities, self.htmlEntities[entities])
                 
             # Append the result on the descriptions list
-            descriptions.append(unescape_result)     
+            data.loc[data['COD_PRODUTO'] == product, 'DESCRIPTION'] = str(unescape_result)
+            #descriptions.append(unescape_result)     
 
         # Add descriptions into the descriptions columns
-        data['DESCRIPTION'] = descriptions   
+        data.DESCRIPTION = data.DESCRIPTION.astype('str')
         # COLOCAR ESSE DATAFRAME NO BD
-        bd_manager.updateProductTable(data)#data.to_csv('df_product.csv', sep=';')
+        bd_manager.updateProductTable(data)
 
         print("Tudo pronto!")
