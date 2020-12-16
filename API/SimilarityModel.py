@@ -49,17 +49,12 @@ class SimilarityModel():
         
         self.save_matrix(results)
 
-    def get_product_name(self, code, df_compras):
-        name = df_compras.loc[df_compras['COD_PRODUTO'] == code]['NOME_PRODUTO'].values[0]
-        return name.strip()
-
     def get_product_classif(self, code, df_compras):
         classif = df_compras.loc[df_compras['COD_PRODUTO'] == code]['CLASSIFICACAO'].values[0]
         return classif
 
     def recommendation(self, code, max_recom, df_compras):
         classification = self.get_product_classif(code, df_compras)
-        name = self.get_product_name(code, df_compras)
         
         recoms = self.sim_results[classification][:max_recom]
         return recoms
@@ -67,12 +62,10 @@ class SimilarityModel():
     def get_products_recom_array(self, code, max_recom, df_compras):
         recoms = self.recommendation(code, max_recom, df_compras)
         
-        df_products_recoms = pd.DataFrame(columns = ['COD_PRODUTO'])
+        df_products_recoms = pd.Series(dtype='int64')
 
         for rec in recoms:
-            df_aux = df_compras.loc[df_compras['CLASSIFICACAO'] == rec[1]]['COD_PRODUTO']
-            df_products_recoms = pd.concat([df_products_recoms, df_aux])
-            
-        df_products_recoms.drop_duplicates()
+            df_aux = df_compras.loc[df_compras['CLASSIFICACAO'] == rec[1]]['COD_PRODUTO'].drop_duplicates()
+            df_products_recoms = pd.concat([df_products_recoms, df_aux], ignore_index=True)
 
         return df_products_recoms.to_numpy()

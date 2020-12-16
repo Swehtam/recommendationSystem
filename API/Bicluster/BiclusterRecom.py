@@ -18,8 +18,6 @@ class BiclusterRecom():
     clientes_cluster = None
     produtos_cluster = None
     biclusters = None
-    #Variavel de teste para retreino
-    teste = None
     
     def __init__(self):
         #Chamar o metodo para pegar o arquivo adjacency list
@@ -27,8 +25,6 @@ class BiclusterRecom():
         self.get_adjacency_list(outputname)
         
         self.get_biclusters()
-        
-        self.teste = 1
         
     #Função para atualizar os valores das variaveis quando iniciar essa classe
     def get_adjacency_list(self, txt_file_name):
@@ -129,8 +125,7 @@ class BiclusterRecom():
         pickle.dump(self.produtos_cluster, open("Bicluster/pickle/produtos_cluster.pickle", "wb"))
         pickle.dump(self.biclusters, open("Bicluster/pickle/biclusters.pickle", "wb"))
         
-        self.teste = 2
-    
+        
     #Cria a lista adjacente e criar o arquivo txt
     def create_adjacency_list(self, df_compras):
         #Ler arquivo de vendas

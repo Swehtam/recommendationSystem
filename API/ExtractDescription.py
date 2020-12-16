@@ -26,7 +26,7 @@ class ExtractDescription():
     
     #OBS.: Recebe db de vendas
     def create_df_product(self, db_cart):
-        db_cart = db_cart[['COD_PRODUTO', 'NOME_PRODUTO']].copy()
+        db_cart = db_cart[['COD_PRODUTO', 'NOME_PRODUTO']]
         data = db_cart.drop_duplicates(ignore_index=True).copy()
 
         print("Iniciando extração das descrições...")
