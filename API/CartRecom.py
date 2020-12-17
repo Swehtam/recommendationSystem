@@ -2,36 +2,36 @@
 # -*- coding: utf-8 -*-
 from SimilarityModel import SimilarityModel
 from DMean import DMean
-from BdManagement import BdManagement
 import pandas as pd
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity, linear_kernel
 from sklearn.feature_extraction.text import TfidfVectorizer
 import regex as re
 from unidecode import unidecode
+import pickle
+from tqdm import tqdm
 import nltk
 nltk.download('stopwords')
 nltk.download('rslp')
 
 similarityModel = SimilarityModel()
 dMean = DMean()
-bd_manager = BdManagement()
 
 class CartRecom():
-    df_compras = None
-    df_products = None
-    #df_matrix_u_c = None #Acho que nao precisa
-    stopwords = None 
     convert_produto = None
     cart_output = None
     
-    def __init__(self, df_compras): 
-        self.df_compras = df_compras
-        self.df_products = bd_manager.getProductsTable()#self.df_products = pd.read_csv('df_product.csv', sep = ';')
-        self.df_products = self.df_products.fillna('')
-        self.convert_produto = pickle.load( open( "Bicluster/pickle/cart_convert_produto.pickle", "rb" ) )
+    def __init__(self):
+        self.convert_produto = pickle.load( open( "pickle/cart_convert_produto.pickle", "rb" ) )
         self.cart_output = pickle.load( open( "pickle/cart_output.pickle", "rb" ) )
         
+    def get_products_to_recommend(self, code):
+        index = self.convert_produto[code]
+        
+        return self.cart_output[index]
+        
+    def calculate_recommendations_similarity(self, code, df_compras, df_products, sim_results, max_recom=3):
+        #Criar o stopwords para serem usados na recomendação baseado na similaridade de descrições
         stopwords = nltk.corpus.stopwords.words('portuguese')
         stopwords.extend(["nao", "...", "[", ']'])
         stopwords.extend(["pois"])
@@ -39,37 +39,10 @@ class CartRecom():
         stopwords.extend(["descrição"])
         stopwords.extend(["produto"])
         
-    #Metodo para pegar a instancia de D_MEAN
-    def get_d_mean(self):
-        return dMean
-        
-    #Metodo para pegar a instancia de SimilarityModel
-    def get_similarityModel(self):
-        return similarityModel
-    
-    #Chamar na API quando for retreinar
-    def create_matrix_u_c(self, df_compras):
-        db_copy = df_compras.copy()
-        db_copy['DUMMY'] = 1
-        df_matrix_u_c = pd.pivot_table(db_copy, 
-                                            values = 'DUMMY', 
-                                            index = 'COD_CLIENTE', 
-                                            columns = 'CLASSIFICACAO', 
-                                            fill_value=0)
-        df_matrix_u_c = df_matrix_u_c.T
-        #matrix_u_c = self.df_matrix_u_c.copy()
-        return df_matrix_u_c
-        
-    def get_products_to_recommend(self, code):
-        index = self.convert_produto[code]
-        
-        return self.cart_output[index]
-        
-    def calculate_recommendations_similarity(self, code, max_recom=3):
-        products = similarityModel.get_products_recom_array(code, max_recom, self.df_compras)
+        products = similarityModel.get_products_recom_array(code, max_recom, df_compras, sim_results)
         products_codes = self.get_products_list(code, products)
-        purchase_similarity = self.purchase_similarity_recom(products_codes, code)
-        description_similarity = self.description_similarity_recom(products_codes, code)
+        purchase_similarity = self.purchase_similarity_recom(products_codes, code, df_compras)
+        description_similarity = self.description_similarity_recom(products_codes, code, df_products, stopwords)
 
         #Calcular a média das tuplas de cada uma das recomendações
         all_tuples_similarity = description_similarity + purchase_similarity
@@ -85,13 +58,15 @@ class CartRecom():
     
     def get_products_list(self, code, products):
         # - pega os codigos dos produtos que devem ser recomendados
-        products_codes = [product[0] for product in products]
-        products_codes.append(product_input)
+        products_codes = [product for product in products]
+        products_codes.append(code)
+        # Caso o próprio codigo do produto ja esteja nessa lista irá tirar sua duplicata
+        products_codes = list(dict.fromkeys(products_codes))
         return products_codes
     
     #Modelo de recomendação por similaridade por compras
-    def purchase_similarity_recom(self, products_codes, code):
-        df_modelo = self.df_compras[self.df_compras.COD_PRODUTO.isin(products_codes)]
+    def purchase_similarity_recom(self, products_codes, code, df_compras):
+        df_modelo = df_compras[df_compras.COD_PRODUTO.isin(products_codes)]
         
         df_matrix_purchase = pd.pivot_table(df_modelo, values = 'QUANTIDADE', index = 'COD_CLIENTE', columns = 'COD_PRODUTO', aggfunc=np.sum, fill_value=0)
         df_matrix_purchase = df_matrix_purchase.T
@@ -105,8 +80,8 @@ class CartRecom():
                 return similar_items[1:]
         
     #Modelo de recomendação por similaridade de descrição dos produtos
-    def description_similarity_recom(self, products_codes, code):
-        df_modelo = self.df_products[self.df_products.COD_PRODUTO.isin(products_codes)]
+    def description_similarity_recom(self, products_codes, code, df_products, stopwords):
+        df_modelo = df_products[df_products.COD_PRODUTO.isin(products_codes)]
         df_modelo = df_modelo.copy()
         df_modelo.DESCRIPTION = df_modelo.DESCRIPTION.astype('str')
 
@@ -123,7 +98,7 @@ class CartRecom():
         # - reseta indices
         df_modelo.reset_index(inplace = True)
         
-        TF = TfidfVectorizer(analyzer='word', ngram_range=(1,3), min_df=0, stop_words=self.stopwords)
+        TF = TfidfVectorizer(analyzer='word', ngram_range=(1,3), min_df=0, stop_words=stopwords)
         TFIDF_matrix = TF.fit_transform(df_modelo['DESCRIPTION'])
                 
         # Calculating cosine similarity
@@ -136,8 +111,28 @@ class CartRecom():
                 similar_items = [(cos_similarity[index][i], df_modelo['COD_PRODUTO'][i]) for i in similar_indexes]
                 return similar_items[1:]
                 
-    def create_cart_recommendation_output(self):
-        df = self.df_compras[['COD_PRODUTO']]
+    #Cria uma matrix esparsa de classificacao por produto
+    def create_matrix_u_c(self, df_compras):
+        db_copy = df_compras.copy()
+        db_copy['DUMMY'] = 1
+        #É mais eficiente fazer cliente por classificacao
+        df_matrix_u_c = pd.pivot_table(db_copy, 
+                                            values = 'DUMMY', 
+                                            index = 'COD_CLIENTE', 
+                                            columns = 'CLASSIFICACAO', 
+                                            fill_value=0)
+        #E depois faz sua transposta para ter o resultado desejado nesse metodo
+        df_matrix_u_c = df_matrix_u_c.T
+        return df_matrix_u_c
+                
+    def create_cart_recommendation_output(self, df_compras, df_products):
+        print("\nCalculando D-Mean...")
+        classif_dict = dMean.get_classif_dict(df_compras)   
+        print("\nCalculando matriz de similaridades...")
+        matrix_u_c = self.create_matrix_u_c(df_compras)
+        sim_results = similarityModel.create_cosine_similarity_matrix(matrix_u_c, classif_dict)
+        
+        df = df_compras[['COD_PRODUTO']]
         df = df.copy()
         df = df.drop_duplicates()
 
@@ -152,15 +147,10 @@ class CartRecom():
         pickle.dump(self.convert_produto, open("pickle/cart_convert_produto.pickle", "wb"))
         
         cart_output = []
-        for key in convert_produto:
-            results = self.calculate_recommendations_similarity(key)
+        print("\nCriando o output para cada produto...")
+        for key in tqdm(self.convert_produto):
+            results = self.calculate_recommendations_similarity(key, df_compras, df_products, sim_results)
             cart_output.append(results)
 
         self.cart_output = cart_output
         pickle.dump(self.cart_output, open("pickle/cart_output.pickle", "wb"))
-    
-    def update_df_products(self):
-        self.df_products = bd_manager.getProductsTable()
-
-    def update_df_compras(self, df_compras):
-        self.df_compras = df_compras

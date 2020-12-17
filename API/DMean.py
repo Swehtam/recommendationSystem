@@ -2,21 +2,17 @@
 # -*- coding: utf-8 -*-
 import pandas as pd
 import pickle
+from tqdm import tqdm
 
 class DMean():
-    class_dict = None
-    df_class_cliente = None
     
-    def __init__(self):
-        self.df_class_cliente = pickle.load(open("pickle/df_class_cliente.pickle", "rb"))
-        self.class_dict = pickle.load(open("pickle/classif_dict.pickle", "rb"))
-    
-    def get_classif_dict(self):
-        return self.class_dict
+    def get_classif_dict(self, df_compras):
+        classif_dict = self.create_classif_dict(df_compras)
+        return classif_dict
         
-    def get_media_sum_cliente(self, df_class_cliente):
+    def get_media_sum_cliente(self, df_media_cliente):
         media_sum = 0
-        for index, rows in df_class_cliente.iterrows():
+        for index, rows in df_media_cliente.iterrows():
             qtde = rows['QUANTIDADE_TOTAL']
             n_buys = rows['#_COMPRAS']
             media = float(qtde/n_buys)
@@ -63,31 +59,27 @@ class DMean():
         df_class_cliente['CLASSIFICACAO'] = df_compras['CLASSIFICACAO'].unique()
         df_class_cliente = df_class_cliente.fillna({'D_MEDIA': 0})
 
-        for index,rows in df_class_cliente.iterrows():
+        for index,rows in tqdm(df_class_cliente.iterrows()):
             classif = rows['CLASSIFICACAO']
-            print("classificacao: " + classif)
+            #print("classificacao: " + classif)
             d_mean = self.get_d_mean_classif(classif, df_compras)
             df_class_cliente.loc[[index], 'D_MEDIA'] = d_mean
-
-        #Salvar os novos valores tanto no pickle quanto na variavel
-        self.df_class_cliente = df_class_cliente
-        pickle.dump(df_class_cliente, open("pickle/df_class_cliente.pickle", "wb"))
         
-        #Por ultimo, chamar a fun??o para cirar o novo dicionario depois de criar uma nova df de classificacao
-        self.classif_dict()
+        #Retorna para a fun??o de criar o dicionario de classificacao
+        return df_class_cliente
         
-    def classif_dict(self):
-        std = self.df_class_cliente.D_MEDIA.std()
-        mean = self.df_class_cliente.D_MEDIA.mean()
+    def create_classif_dict(self, df_compras):
+        df_class_cliente = self.create_class_cliente_df(df_compras)
+        std = df_class_cliente.D_MEDIA.std()
+        mean = df_class_cliente.D_MEDIA.mean()
 
         d_mean_threshold = mean + std
 
         classif_dict = {}
-        for index,rows in self.df_class_cliente.iterrows():
+        for index,rows in df_class_cliente.iterrows():
             if (rows['D_MEDIA'] >= d_mean_threshold):
                 classif_dict[rows['CLASSIFICACAO']] = True
             else:
                 classif_dict[rows['CLASSIFICACAO']] = False
 
-        self.class_dict = classif_dict
-        pickle.dump(classif_dict, open("pickle/classif_dict.pickle", "wb"))
+        return classif_dict
