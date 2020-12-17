@@ -27,6 +27,7 @@ class Recommendation:
         self.db_purchase.QUANTIDADE = self.db_purchase.QUANTIDADE.astype('int16')
         
         self.df_products = bd_manager.getProductsTable()
+        self.df_products.DESCRIPTION = self.df_products.DESCRIPTION.astype('str')
         self.df_products.DESCRIPTION.fillna('', inplace=True)
 
     def retrain_model(self, bicluster_recom, cart_recom):
@@ -47,7 +48,8 @@ class Recommendation:
         print("\nAtualizando tabela de produtos no DB...")
         description_extractor.create_df_product(self.db_cart)
         self.df_products = bd_manager.getProductsTable()
-        self.df_products = self.df_products.fillna('')
+        self.df_products.DESCRIPTION = self.df_products.DESCRIPTION.astype('str')
+        self.df_products.DESCRIPTION.fillna('', inplace=True)
         print("\nFinalizado!...")
         print("\nAtualizações de tabelas finalizada...")
         
@@ -61,16 +63,7 @@ class Recommendation:
         
         # - Retrain Add To Cart:
         print("\nTreinando recomendações do carrinho...")
-        #db_cart_teste = self.db_cart.loc[:5000].copy()
-        #produtos = db_cart_teste['COD_PRODUTO'].unique()
-        #df_products_teste = self.df_products[self.df_products.COD_PRODUTO.isin(produtos)].copy()
-        #stemmer = nltk.stem.RSLPStemmer()
-        #df_products_teste.DESCRIPTION = df_products_teste.DESCRIPTION.astype('str')
-        #print(df_products_teste)
-        #df_products_teste.DESCRIPTION = df_products_teste.DESCRIPTION.apply(lambda x: stemmer.stem(x))
         cart_recom.create_cart_recommendation_output(self.db_cart, self.df_products)
-        #TESTE
-        #cart_recom.create_cart_recommendation_output(db_cart_teste, df_products_teste)
         print("\nTreinamento finalizado...")
         
         # - Retrain Purchased Based:
