@@ -11,6 +11,7 @@ from unidecode import unidecode
 import pickle
 from tqdm import tqdm
 import nltk
+from scipy.sparse import csr_matrix
 nltk.download('stopwords')
 nltk.download('rslp')
 
@@ -30,7 +31,7 @@ class CartRecom():
         
         return self.cart_output[index]
         
-    def calculate_recommendations_similarity(self, code, df_compras, df_products, sim_results, max_recom=3):
+    def calculate_recommendations_similarity(self, code, df_compras, df_products, sim_results, max_recom=2):
         #Criar o stopwords para serem usados na recomendação baseado na similaridade de descrições
         stopwords = nltk.corpus.stopwords.words('portuguese')
         stopwords.extend(["nao", "...", "[", ']'])
@@ -67,17 +68,24 @@ class CartRecom():
     #Modelo de recomendação por similaridade por compras
     def purchase_similarity_recom(self, products_codes, code, df_compras):
         df_modelo = df_compras[df_compras.COD_PRODUTO.isin(products_codes)]
-        
-        df_matrix_purchase = pd.pivot_table(df_modelo, values = 'QUANTIDADE', index = 'COD_CLIENTE', columns = 'COD_PRODUTO', aggfunc=np.sum, fill_value=0)
+
+        #Mais rapido do q o pivot table
+        df_matrix_purchase = df_modelo.groupby(["COD_PRODUTO", "COD_CLIENTE"]).agg({"QUANTIDADE": 'sum'}).unstack(level="COD_PRODUTO").fillna(0)
+        df_matrix_purchase.columns = df_matrix_purchase.columns.droplevel(0)
         df_matrix_purchase = df_matrix_purchase.T
-        cos_sim_purchase = cosine_similarity(df_matrix_purchase)
         
-        df_matrix_index = df_matrix_purchase.copy().reset_index()
-        for index,rows in df_matrix_index.iterrows():
-            if (rows['COD_PRODUTO'] == code):
+        df_matrix_purchase_compressed = csr_matrix(df_matrix_purchase)
+        cos_sim_purchase = cosine_similarity(df_matrix_purchase_compressed)
+        
+        df_matrix_purchase = df_matrix_purchase.reset_index()
+        index = 0
+        for p_code in df_matrix_purchase['COD_PRODUTO']:
+            if (p_code == code):
                 similar_indexes = cos_sim_purchase[index].argsort()[:-100:-1]
-                similar_items = [(cos_sim_purchase[index][i], df_matrix_index['COD_PRODUTO'][i]) for i in similar_indexes]
+                similar_items = [(cos_sim_purchase[index][i], df_matrix_purchase['COD_PRODUTO'][i]) for i in similar_indexes]
                 return similar_items[1:]
+                
+            index += 1
         
     #Modelo de recomendação por similaridade de descrição dos produtos
     def description_similarity_recom(self, products_codes, code, df_products, stopwords):
@@ -102,14 +110,17 @@ class CartRecom():
         TFIDF_matrix = TF.fit_transform(df_modelo['DESCRIPTION'])
                 
         # Calculating cosine similarity
-        cos_similarity = linear_kernel(TFIDF_matrix, TFIDF_matrix)
-         
-        for index,rows in df_modelo.iterrows():
-            if (rows['COD_PRODUTO'] == code):
+        TFIDF_matrix_sparse = csr_matrix(TFIDF_matrix)
+        cos_similarity = linear_kernel(TFIDF_matrix_sparse, TFIDF_matrix_sparse)
+                
+        index = 0
+        for p_code in df_modelo['COD_PRODUTO']:
+            if (p_code == code):
                 similar_indexes = cos_similarity[index].argsort()[:-100:-1]
-                #Lembrar de mudar o nome da coluna "COD_PRODUTO" para o nome correspondete na tabela de produtos
                 similar_items = [(cos_similarity[index][i], df_modelo['COD_PRODUTO'][i]) for i in similar_indexes]
                 return similar_items[1:]
+                
+            index += 1
                 
     #Cria uma matrix esparsa de classificacao por produto
     def create_matrix_u_c(self, df_compras):
@@ -148,9 +159,11 @@ class CartRecom():
         
         cart_output = []
         print("\nCriando o output para cada produto...")
-        for key in tqdm(self.convert_produto):
-            results = self.calculate_recommendations_similarity(key, df_compras, df_products, sim_results)
-            cart_output.append(results)
+        with tqdm(total=len(self.convert_produto)) as pbar:
+            for key in self.convert_produto:
+                results = self.calculate_recommendations_similarity(key, df_compras, df_products, sim_results)
+                cart_output.append(results)
+                pbar.update(1)
 
         self.cart_output = cart_output
         pickle.dump(self.cart_output, open("pickle/cart_output.pickle", "wb"))

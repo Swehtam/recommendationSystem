@@ -50,17 +50,12 @@ class BdManagement:
     def getSalesTable(self):
         """ Retorna a tabela de vendas do banco """
         conn = self.connect()
-        query = """SELECT "COD_FILIAL", 
-                            "ORCAMENTO",
-                            "HORA",	
+        query = """SELECT   "ORCAMENTO",
                             "COD_CLIENTE",
-                            "SEXO",	
-                            "IDADE",
                             "COD_PRODUTO", 
                             "NOME_PRODUTO",
                             "CLASSIFICACAO",
-                            "QUANTIDADE",
-                            "CANAL" FROM vendas_teste;"""
+                            "QUANTIDADE" FROM vendas;"""
         data_armz = None
         cursor = conn.cursor()
         try:
@@ -102,7 +97,7 @@ class BdManagement:
             a recomendação utilizando TuriCreate
         """
         conn = self.connect()
-        query = """SELECT "COD_CLIENTE","COD_PRODUTO","QUANTIDADE" FROM vendas_teste;"""
+        query = """SELECT "COD_CLIENTE","COD_PRODUTO","QUANTIDADE" FROM vendas;"""
         data_recom = None
         cursor = conn.cursor()
         try:

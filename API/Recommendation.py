@@ -7,6 +7,8 @@ from BdManagement import BdManagement
 from ExtractDescription import ExtractDescription
 import nltk
 nltk.download('rslp')
+from subprocess import Popen, PIPE
+import shlex
 
 model = Model()
 bd_manager = BdManagement()
@@ -19,16 +21,16 @@ class Recommendation:
     df_products = pd.DataFrame()
     
     ##**************** EU ACHO Q DA PRA TIRAR ISSO DAQUI NA PRODUÇÃO E DEIXAR PARA TESTES DO RETRAIN********************
-    def __init__(self):
-        self.db_cart = bd_manager.getSalesTable()
-        self.db_cart.CLASSIFICACAO = self.db_cart.CLASSIFICACAO.apply(lambda x : x.strip())
+    #def __init__(self):
+        #self.db_cart = bd_manager.getSalesTable()
+        #self.db_cart.CLASSIFICACAO = self.db_cart.CLASSIFICACAO.apply(lambda x : x.strip())
         
-        self.db_purchase = bd_manager.getClientRecomTable()
-        self.db_purchase.QUANTIDADE = self.db_purchase.QUANTIDADE.astype('int16')
+        #self.db_purchase = bd_manager.getClientRecomTable()
+        #self.db_purchase.QUANTIDADE = self.db_purchase.QUANTIDADE.astype('int16')
         
-        self.df_products = bd_manager.getProductsTable()
-        self.df_products.DESCRIPTION = self.df_products.DESCRIPTION.astype('str')
-        self.df_products.DESCRIPTION.fillna('', inplace=True)
+        #self.df_products = bd_manager.getProductsTable()
+        #self.df_products.DESCRIPTION = self.df_products.DESCRIPTION.astype('str')
+        #self.df_products.DESCRIPTION.fillna('', inplace=True)
 
     def retrain_model(self, bicluster_recom, cart_recom):
         # - Atualizar tabela de vendas 
@@ -68,7 +70,7 @@ class Recommendation:
         
         # - Retrain Purchased Based:
         # variables to define field names:
-        # CHANGE TO READ THE PROVIDED DATA     
+        # CHANGE TO READ THE PROVIDED DATA
         db = self.db_purchase        
         user_id = 'COD_CLIENTE'
         item_id = 'COD_PRODUTO'
