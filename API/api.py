@@ -3,7 +3,7 @@
 
 import sys
 sys.path.append(".")
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, json
 import json
 import pandas as pd
 from Purchase import Purchase
@@ -16,14 +16,16 @@ from BdManagement import BdManagement
 
 app = Flask(__name__)
 
+
 add_product = Purchase()
 retrain_recom = Recommendation()
 description = Description()
 scrap_desc = Scrapper()
-cart_recom = CartRecom()
+cart_recom = CartRecom(retrain_recom.db_cart)
 bicluster_recom = BiclusterRecom()
 bd_manager = BdManagement()
 output = None
+
 
 # ************************************************************* #
 # *********************** MÉTODOS GET ************************* #
@@ -54,25 +56,35 @@ def recom_per_user():
             client_recom = output[output.index == index[0]].recommendedProducts.values[0].split('|')   
             recommendations['CLIENT'] = client_recom
             if(product_id == None):                                  
-                return json.dumps(recommendations), 200
+                return app.response_class(response = json.dumps(recommendations),
+                                          status = 200,
+                                          mimetype='application/json')
             else:
                 product_id = int(product_id)
                 product_recom = cart_recom.get_products_to_recommend(product_id)        
                 recommendations['PRODUCT'] = product_recom
-                return json.dumps(recommendations), 200
+                return app.response_class(response = json.dumps(recommendations),
+                                          status = 200,
+                                          mimetype='application/json') 
         except:
-            return json.dumps("Cliente não treinado, tente outro."), 405        
+            return app.response_class(response = json.dumps("Cliente não treinado, tente outro."),
+                                          status = 405,
+                                          mimetype='application/json')     
     elif(user_id == None and product_id != None):
-        #try:
-        product_id = int(product_id)
-        product_recom = cart_recom.get_products_to_recommend(product_id)
-        recommendations['PRODUCT'] = product_recom
-        return json.dumps(recommendations), 200       
-        #except:
-         #   return json.dumps("Produto não treinado, tente outro."), 405 
-    else:
-        return jsonify({'error':'Não há como gerar recomendações sem um produto ou cliente.'}), 406
-
+        try:
+            product_id = int(product_id)
+            product_recom = cart_recom.get_products_to_recommend(product_id)
+            recommendations['PRODUCT'] = product_recom
+            return app.response_class(response = json.dumps(recommendations),
+                                          status = 200,
+                                          mimetype='application/json')   
+        except:
+            return app.response_class(response = jsonify({'error':'Produo não treinado, tente outro.'}),
+                                          status = 405,
+                                          mimetype='application/json') 
+        return app.response_class(response = jsonify({'error':'Não há como gerar recomendações sem um produto ou cliente.'}),
+                                          status = 406,
+                                          mimetype='application/json')
 
 # - Lista produtos semelhantes aos recomendados para o cliente
 '''@app.route('/recommendations/desc/<string:user_id>', methods=['GET'])
@@ -143,5 +155,5 @@ def add_purchase():
     return status, 201
 
 if __name__ == '__main__':
-    #app.config['DEBUG'] = True
+    app.config['DEBUG'] = True
     app.run()
