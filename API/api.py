@@ -49,12 +49,20 @@ def recom_per_user():
     product_id = request.args.get('product_id', None)
     recommendations = {'CLIENT' : '', 'PRODUCT' : ''}
     if(user_id != None):
-        try:
+        try:            
             output = bd_manager.getOutputRecom()
             print("Output recebido do BD.")
-            index = output[output['COD_CLIENTE']==user_id].index.values
-            client_recom = output[output.index == index[0]].recommendedProducts.values[0].split('|')   
-            recommendations['CLIENT'] = client_recom
+            # - Checar na recomendação do turicreate
+            try:
+                index = output[output['COD_CLIENTE']==user_id].index.values
+                client_recom = output[output.index == index[0]].recommendedProducts.values[0].split('|')[:10]
+                recommendations['CLIENT'] = client_recom
+                print("RECOMENDAÇÂO TURICREATE: ", client_recom)
+            # - Checar na recomendação do bicluster
+            except:
+                client_recom, return_code = recom_bicluster_user(user_id)
+                recommendations['CLIENT'] = client_recom['BICLUSTER']
+                print("RECOMENDAÇÂO BICLUSTER: ", client_recom)
             if(product_id == None):                                  
                 return app.response_class(response = json.dumps(recommendations),
                                           status = 200,
@@ -85,6 +93,7 @@ def recom_per_user():
         return app.response_class(response = jsonify({'error':'Não há como gerar recomendações sem um produto ou cliente.'}),
                                           status = 406,
                                           mimetype='application/json')
+
 
 # - Lista produtos semelhantes aos recomendados para o cliente
 '''@app.route('/recommendations/desc/<string:user_id>', methods=['GET'])
