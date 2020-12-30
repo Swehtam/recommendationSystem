@@ -24,7 +24,7 @@ scrap_desc = Scrapper()
 cart_recom = CartRecom()
 bicluster_recom = BiclusterRecom()
 bd_manager = BdManagement()
-output = None
+output = bd_manager.getOutputRecom()
 
 
 # ************************************************************* #
@@ -38,7 +38,7 @@ def home():
 # - Lista todas as recomendações
 @app.route('/recommendations', methods=['GET'])
 def recommendations():
-    output = bd_manager.getOutputRecom()
+    #output = bd_manager.getOutputRecom()
     output.set_index(['COD_CLIENTE'], inplace=False)
     return output.to_json(), 200
 
@@ -50,7 +50,7 @@ def recom_per_user():
     recommendations = {'CLIENT' : '', 'PRODUCT' : ''}
     if(user_id != None):
         try:            
-            output = bd_manager.getOutputRecom()
+            #output = bd_manager.getOutputRecom()
             print("Output recebido do BD.")
             # - Checar na recomendação do turicreate
             try:
@@ -112,7 +112,7 @@ def recom_desc_user(user_id):
 def product_recom_summary(product_id):
     if(len(product_id) < 5):
         return jsonify({'error':'Não é um código de produto válido.'}), 404
-    output = bd_manager.getOutputRecom() #pd.read_csv('output.csv', sep = ";")
+    #output = bd_manager.getOutputRecom() #pd.read_csv('output.csv', sep = ";")
     contain_values = output[output['recommendedProducts'].str.contains(product_id)]
     if(len(contain_values) == 0):
         return jsonify({'error':'Não há recomendações com esse produto.'}), 404
@@ -124,7 +124,7 @@ def product_recom_summary(product_id):
 def product_recom_count(product_id):
     if(len(product_id) < 5):
         return jsonify({'error':'Não é um código de produto válido.'}), 404
-    output = bd_manager.getOutputRecom()
+    #output = bd_manager.getOutputRecom()
     contain_values = output[output['recommendedProducts'].str.contains(product_id)]
     count = ("Número de recomendações desse produto:", len(contain_values.index))
     if(len(contain_values) == 0):
@@ -142,7 +142,8 @@ def recom_bicluster_user(user_id):
 # - Retreina o modelo
 @app.route('/retrain', methods=['GET'])
 def retrain():
-    status = retrain_recom.retrain_model(bicluster_recom, cart_recom)
+    status, df_output = retrain_recom.retrain_model(bicluster_recom, cart_recom)
+    output = df_output
     return status, 200
 
 # ************************************************************** #
@@ -164,5 +165,5 @@ def add_purchase():
     return status, 201
 
 if __name__ == '__main__':
-    app.config['DEBUG'] = True
+    #app.config['DEBUG'] = True
     app.run()

@@ -31,7 +31,7 @@ class CartRecom():
         
         return self.cart_output[index]
         
-    def calculate_recommendations_similarity(self, code, df_compras, df_products, sim_results, max_recom=2):
+    def calculate_recommendations_similarity(self, code, df_compras, df_products, sim_results, df_compras_pivot, max_recom=2):
         #Criar o stopwords para serem usados na recomendação baseado na similaridade de descrições
         stopwords = nltk.corpus.stopwords.words('portuguese')
         stopwords.extend(["nao", "...", "[", ']'])
@@ -42,7 +42,7 @@ class CartRecom():
         
         products = similarityModel.get_products_recom_array(code, max_recom, df_compras, sim_results)
         products_codes = self.get_products_list(code, products)
-        purchase_similarity = self.purchase_similarity_recom(products_codes, code, df_compras)
+        purchase_similarity = self.purchase_similarity_recom(products_codes, code, df_compras_pivot)
         description_similarity = self.description_similarity_recom(products_codes, code, df_products, stopwords)
 
         #Calcular a média das tuplas de cada uma das recomendações
@@ -66,11 +66,9 @@ class CartRecom():
         return products_codes
     
     #Modelo de recomendação por similaridade por compras
-    def purchase_similarity_recom(self, products_codes, code, df_compras):
-        df_modelo = df_compras[df_compras.COD_PRODUTO.isin(products_codes)]
-
-        #Mais rapido do q o pivot table
-        df_matrix_purchase = df_modelo.groupby(["COD_PRODUTO", "COD_CLIENTE"]).agg({"QUANTIDADE": 'sum'}).unstack(level="COD_PRODUTO").fillna(0)
+    def purchase_similarity_recom(self, products_codes, code, df_compras_pivot):
+    
+        df_matrix_purchase = df_compras_pivot[df_compras_pivot.index.get_level_values("COD_PRODUTO").isin(products_codes)].unstack(level="COD_CLIENTE").fillna(0).astype('float16')
         df_matrix_purchase.columns = df_matrix_purchase.columns.droplevel(0)
         df_matrix_purchase = df_matrix_purchase.T
         
@@ -158,10 +156,11 @@ class CartRecom():
         pickle.dump(self.convert_produto, open("pickle/cart_convert_produto.pickle", "wb"))
         
         cart_output = []
+        df_compras_pivot = df_compras.groupby(["COD_PRODUTO", "COD_CLIENTE"]).agg({"QUANTIDADE": 'sum'})
         print("\nCriando o output para cada produto...")
         with tqdm(total=len(self.convert_produto)) as pbar:
             for key in self.convert_produto:
-                results = self.calculate_recommendations_similarity(key, df_compras, df_products, sim_results)
+                results = self.calculate_recommendations_similarity(key, df_compras, df_products, sim_results, df_compras_pivot)
                 cart_output.append(results)
                 pbar.update(1)
 
