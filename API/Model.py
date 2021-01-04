@@ -9,9 +9,9 @@ import dask.dataframe as dd
 
 class Model:
     
-    def dask_pivot_melt(classif, vendas):  
+    def dask_pivot_melt(self, classif, vendas):  
         vendas_classif = vendas.loc[vendas['CLASSIFICACAO'] == classif].copy()
-        dask_vendas = dd.from_pandas(vendas_classif, npartitions=2)
+        dask_vendas = dd.from_pandas(vendas_classif, npartitions=4)
         dask_vendas = dask_vendas.categorize(columns=['COD_PRODUTO'])
         #Faz a matriz esparsa de cliente por produto em cada categoria
         dask_vendas_pivot = dask_vendas.pivot_table(values='QUANTIDADE', index='COD_CLIENTE', columns='COD_PRODUTO', aggfunc='sum').fillna(0).astype('float16')
@@ -33,7 +33,7 @@ class Model:
         #Transforma para pandas
         return dask_data_norm.compute()
     
-    def matrix_normalization(self,db):
+    '''def matrix_normalization(self,db):
         #db.QUANTIDADE = db.QUANTIDADE.astype('int32')
         df_matrix = pd.pivot_table(db, 
                                    values = 'QUANTIDADE', 
@@ -61,7 +61,7 @@ class Model:
         data_norm = pd.melt(data_input, id_vars=['COD_CLIENTE'],
                             value_name='FREQ_COMPRAS')
         data_norm = data_norm.dropna()
-        return data_norm
+        return data_norm'''
 
     # Returns train and test datasets as scalable dataframes
     def split_data(self,data):
@@ -87,10 +87,6 @@ class Model:
         df_rec = recomendation.to_dataframe()
         df_rec['recommendedProducts'] = df_rec.groupby([user_id])[item_id].transform(lambda x: '|'.join(x.astype(str)))
         df_output = df_rec[['COD_CLIENTE','recommendedProducts']].drop_duplicates().sort_values('COD_CLIENTE').set_index('COD_CLIENTE')
-
-        #if print_csv:
-        #    df_output.to_csv(r'output.csv', sep=';')
-        #    print("An output file can be found with name 'output.csv'")
 
         return df_output
 
