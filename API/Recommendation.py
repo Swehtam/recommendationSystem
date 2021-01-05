@@ -22,7 +22,7 @@ class Recommendation:
     df_products = pd.DataFrame()
     
     ##**************** EU ACHO Q DA PRA TIRAR ISSO DAQUI NA PRODUÇÃO E DEIXAR PARA TESTES DO RETRAIN********************
-    def __init__(self):
+    """def __init__(self):
         self.db_cart = bd_manager.getSalesTable()
         self.db_cart.CLASSIFICACAO = self.db_cart.CLASSIFICACAO.apply(lambda x : x.strip())
         self.db_cart.QUANTIDADE = self.db_cart.QUANTIDADE.values.astype(np.int16)
@@ -34,10 +34,10 @@ class Recommendation:
         
         self.df_products = bd_manager.getProductsTable()
         self.df_products.DESCRIPTION = self.df_products.DESCRIPTION.astype('str')
-        self.df_products.DESCRIPTION.fillna('', inplace=True)
+        self.df_products.DESCRIPTION.fillna('', inplace=True)"""
 
     def retrain_model(self, bicluster_recom, cart_recom):
-        """# - Atualizar tabela de vendas 
+        # - Atualizar tabela de vendas 
         print("\nAtualizando todas tabela encontradas no DB...")
         print("\nAtualizando tabela de vendas...")
         self.db_cart = bd_manager.getSalesTable()
@@ -73,7 +73,7 @@ class Recommendation:
         # - Retrain Add To Cart:
         print("\nTreinando recomendações do carrinho...")
         cart_recom.create_cart_recommendation_output(self.db_cart, self.df_products)
-        print("\nTreinamento finalizado...")"""
+        print("\nTreinamento finalizado...")
         
         # - Retrain Purchased Based:
         # variables to define field names:
@@ -85,10 +85,10 @@ class Recommendation:
         n_rec = 10 # itens to recommend
         
         print("\nTreinando reomcendação cliente...")
-        classif_array = self.db_cart.CLASSIFICACAO.unique()
+        classif_array = self.db_purchase.CLASSIFICACAO.unique()
         melt_df_array = []
         for classif in tqdm(classif_array):
-          pandas_result = model.dask_pivot_melt(classif, self.db_cart)
+          pandas_result = model.dask_pivot_melt(classif, self.db_purchase)
           melt_df_array.append(pandas_result)
           
         print("\nConcatenando dataframes...")

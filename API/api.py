@@ -24,7 +24,7 @@ scrap_desc = Scrapper()
 cart_recom = CartRecom()
 bicluster_recom = BiclusterRecom()
 bd_manager = BdManagement()
-#output = bd_manager.getOutputRecom()
+output = bd_manager.getOutputRecom()
 
 
 # ************************************************************* #
