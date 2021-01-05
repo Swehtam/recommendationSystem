@@ -86,7 +86,7 @@ class Model:
         recomendation = model
         df_rec = recomendation.to_dataframe()
         df_rec['recommendedProducts'] = df_rec.groupby([user_id])[item_id].transform(lambda x: '|'.join(x.astype(str)))
-        df_output = df_rec[['COD_CLIENTE','recommendedProducts']].drop_duplicates().sort_values('COD_CLIENTE').set_index('COD_CLIENTE')
+        df_output = df_rec[['COD_CLIENTE','recommendedProducts']].drop_duplicates().sort_values('COD_CLIENTE')#.set_index('COD_CLIENTE')
 
         return df_output
 

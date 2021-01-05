@@ -22,7 +22,7 @@ class Recommendation:
     df_products = pd.DataFrame()
     
     ##**************** EU ACHO Q DA PRA TIRAR ISSO DAQUI NA PRODUÇÃO E DEIXAR PARA TESTES DO RETRAIN********************
-    '''def __init__(self):
+    def __init__(self):
         self.db_cart = bd_manager.getSalesTable()
         self.db_cart.CLASSIFICACAO = self.db_cart.CLASSIFICACAO.apply(lambda x : x.strip())
         self.db_cart.QUANTIDADE = self.db_cart.QUANTIDADE.values.astype(np.int16)
@@ -34,10 +34,10 @@ class Recommendation:
         
         self.df_products = bd_manager.getProductsTable()
         self.df_products.DESCRIPTION = self.df_products.DESCRIPTION.astype('str')
-        self.df_products.DESCRIPTION.fillna('', inplace=True)'''
+        self.df_products.DESCRIPTION.fillna('', inplace=True)
 
     def retrain_model(self, bicluster_recom, cart_recom):
-        # - Atualizar tabela de vendas 
+        """# - Atualizar tabela de vendas 
         print("\nAtualizando todas tabela encontradas no DB...")
         print("\nAtualizando tabela de vendas...")
         self.db_cart = bd_manager.getSalesTable()
@@ -73,7 +73,7 @@ class Recommendation:
         # - Retrain Add To Cart:
         print("\nTreinando recomendações do carrinho...")
         cart_recom.create_cart_recommendation_output(self.db_cart, self.df_products)
-        print("\nTreinamento finalizado...")
+        print("\nTreinamento finalizado...")"""
         
         # - Retrain Purchased Based:
         # variables to define field names:
