@@ -57,23 +57,22 @@ def recom_per_user():
                 index = output[output['COD_CLIENTE']==user_id].index.values
                 client_recom = output[output.index == index[0]].recommendedProducts.values[0].split('|')[:10]
                 recommendations['CLIENT'] = client_recom
-                print("RECOMENDAÇÂO TURICREATE: ", client_recom)
             # - Checar na recomendação do bicluster
             except:
                 client_recom, return_code = recom_bicluster_user(user_id)
                 recommendations['CLIENT'] = client_recom['BICLUSTER']
-                print("RECOMENDAÇÂO BICLUSTER: ", client_recom)
-            if(product_id == None):                                  
-                return app.response_class(response = json.dumps(recommendations),
-                                          status = 200,
-                                          mimetype='application/json')
-            else:
-                product_id = int(product_id)
-                product_recom = cart_recom.get_products_to_recommend(product_id)        
-                recommendations['PRODUCT'] = product_recom
-                return app.response_class(response = json.dumps(recommendations),
-                                          status = 200,
-                                          mimetype='application/json') 
+            finally:
+                if(product_id == None):                                  
+                    return app.response_class(response = json.dumps(recommendations),
+                                            status = 200,
+                                            mimetype='application/json')
+                else:
+                    product_id = int(product_id)
+                    product_recom = cart_recom.get_products_to_recommend(product_id)        
+                    recommendations['PRODUCT'] = product_recom
+                    return app.response_class(response = json.dumps(recommendations),
+                                            status = 200,
+                                            mimetype='application/json') 
         except:
             return app.response_class(response = json.dumps("Cliente não treinado, tente outro."),
                                           status = 405,
