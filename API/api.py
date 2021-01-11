@@ -13,6 +13,7 @@ from Scrapper import Scrapper
 from CartRecom import CartRecom
 from Bicluster.BiclusterRecom import BiclusterRecom
 from BdManagement import BdManagement
+from ClientRecom import ClientRecom
 
 app = Flask(__name__)
 
@@ -24,8 +25,7 @@ scrap_desc = Scrapper()
 cart_recom = CartRecom()
 bicluster_recom = BiclusterRecom()
 bd_manager = BdManagement()
-output = bd_manager.getOutputRecom()
-
+client_recom = ClientRecom()
 
 # ************************************************************* #
 # *********************** MÉTODOS GET ************************* #
@@ -38,8 +38,7 @@ def home():
 # - Lista todas as recomendações
 @app.route('/recommendations', methods=['GET'])
 def recommendations():
-    #output = bd_manager.getOutputRecom()
-    output.set_index(['COD_CLIENTE'], inplace=False)
+    output = client_recom.recommendations()
     return output.to_json(), 200
 
 # - Lista recomendações para um dado cliente
@@ -47,52 +46,73 @@ def recommendations():
 def recom_per_user():    
     user_id = request.args.get('user_id', None)
     product_id = request.args.get('product_id', None)
+    #filial_id = request.args.get('filial_id', None)
     recommendations = {'CLIENT' : '', 'PRODUCT' : ''}
     if(user_id != None):
-        try:            
-            #output = bd_manager.getOutputRecom()
-            print("Output recebido do BD.")
-            # - Checar na recomendação do turicreate
-            try:
-                index = output[output['COD_CLIENTE']==user_id].index.values
-                client_recom = output[output.index == index[0]].recommendedProducts.values[0].split('|')[:10]
-                recommendations['CLIENT'] = client_recom
+        print("Output recebido do BD.")
+        # - Checar na recomendação do turicreate
+        recom = client_recom.get_client_to_recommend(user_id)
+        if(recom != None):
+            recommendations['CLIENT'] = recom
+            
+        else: 
             # - Checar na recomendação do bicluster
-            except:
-                client_recom, return_code = recom_bicluster_user(user_id)
-                recommendations['CLIENT'] = client_recom['BICLUSTER']
-            finally:
-                if(product_id == None):                                  
-                    return app.response_class(response = json.dumps(recommendations),
-                                            status = 200,
-                                            mimetype='application/json')
-                else:
-                    product_id = int(product_id)
-                    product_recom = cart_recom.get_products_to_recommend(product_id)        
-                    recommendations['PRODUCT'] = product_recom
-                    return app.response_class(response = json.dumps(recommendations),
-                                            status = 200,
-                                            mimetype='application/json') 
-        except:
-            return app.response_class(response = json.dumps("Cliente não treinado, tente outro."),
-                                          status = 405,
-                                          mimetype='application/json')     
-    elif(user_id == None and product_id != None):
-        try:
+            recom_bi, return_text, return_code = bicluster_recom.recomenda_cliente(user_id)
+            if(recom_bi != None):
+                recommendations['CLIENT'] = recom_bi
+                
+            else:
+                #------POR ENQUANTO COMO NÃO TEM COD_FILIAL, ENTAO DEIXA ISSO AQUI COMENTADO------
+                #if(filial_id != None):
+                    #Fazer chamar a recomendação pra cliente novo
+                    #recom_new = client_recom.recommend_to_new_client(cod_filial)
+                    #if(recom_new != None):
+                        #recommendations['CLIENT'] = recom_new
+                        
+                    #else:
+                        #return app.response_class(response = jsonify({'error':'Erro inesperado encontrado, contacte o administrador.'}),
+                                                             #status = 500,
+                                                             #mimetype='application/json')
+                #else: #------QUALQUER COISA SO TIRAR ESSE ELSE------
+                    #return app.response_class(response = jsonify({'error':'Código da filial não foi informado para a requisão de novo cliente.'}),
+                                                         #status = 400,
+                                                         #mimetype='application/json')               
+
+                #------POR ENQUANTO DEIXA ESSE DAQUI------
+                return app.response_class(response = jsonify({'error':'Cliente não consta na base de dados.'}),
+                                                     status = 404,
+                                                     mimetype='application/json') 
+                                                     
+        if(product_id == None):                                  
+            return app.response_class(response = json.dumps(recommendations),
+                                    status = 200,
+                                    mimetype='application/json')
+        else:
             product_id = int(product_id)
-            product_recom = cart_recom.get_products_to_recommend(product_id)
+            product_recom = cart_recom.get_products_to_recommend(product_id)        
+            recommendations['PRODUCT'] = product_recom
+            return app.response_class(response = json.dumps(recommendations),
+                                    status = 200,
+                                    mimetype='application/json')               
+                                          
+    elif(user_id == None and product_id != None):
+        product_id = int(product_id)
+        product_recom = cart_recom.get_products_to_recommend(product_id)
+        if(product_recom != None):
             recommendations['PRODUCT'] = product_recom
             return app.response_class(response = json.dumps(recommendations),
                                           status = 200,
-                                          mimetype='application/json')   
-        except:
-            return app.response_class(response = jsonify({'error':'Produo não treinado, tente outro.'}),
-                                          status = 405,
                                           mimetype='application/json') 
+                                             
+        else:
+            return app.response_class(response = jsonify({'error':'Cliente não consta na base de dados.'}),
+                                          status = 404,
+                                          mimetype='application/json')
+                                          
+    else:
         return app.response_class(response = jsonify({'error':'Não há como gerar recomendações sem um produto ou cliente.'}),
                                           status = 406,
                                           mimetype='application/json')
-
 
 # - Lista produtos semelhantes aos recomendados para o cliente
 '''@app.route('/recommendations/desc/<string:user_id>', methods=['GET'])
@@ -111,7 +131,7 @@ def recom_desc_user(user_id):
 def product_recom_summary(product_id):
     if(len(product_id) < 5):
         return jsonify({'error':'Não é um código de produto válido.'}), 404
-    #output = bd_manager.getOutputRecom() #pd.read_csv('output.csv', sep = ";")
+    output = client_recom.get_clients_output()
     contain_values = output[output['recommendedProducts'].str.contains(product_id)]
     if(len(contain_values) == 0):
         return jsonify({'error':'Não há recomendações com esse produto.'}), 404
@@ -123,7 +143,7 @@ def product_recom_summary(product_id):
 def product_recom_count(product_id):
     if(len(product_id) < 5):
         return jsonify({'error':'Não é um código de produto válido.'}), 404
-    #output = bd_manager.getOutputRecom()
+    output = client_recom.get_clients_output()
     contain_values = output[output['recommendedProducts'].str.contains(product_id)]
     count = ("Número de recomendações desse produto:", len(contain_values.index))
     if(len(contain_values) == 0):
@@ -135,14 +155,21 @@ def product_recom_count(product_id):
 @app.route('/recommendations/bicluster/<string:user_id>', methods=['GET'])
 def recom_bicluster_user(user_id):
     recoms = {'BICLUSTER' : ''}
-    recoms['BICLUSTER'], return_code = bicluster_recom.recomenda_cliente(user_id)
-    return json.dumps(recoms), return_code
+    recom, return_text, return_code = bicluster_recom.recomenda_cliente(user_id)
+    if (recom != None):
+        recoms['BICLUSTER'] = recom
+        return app.response_class(response = json.dumps(recoms),
+                                             status = return_code,
+                                             mimetype='application/json')
+    else:
+        return app.response_class(response = jsonify({'error': return_text}),
+                                             status = return_code,
+                                             mimetype='application/json')
         
 # - Retreina o modelo
 @app.route('/retrain', methods=['GET'])
 def retrain():
-    status, df_output = retrain_recom.retrain_model(bicluster_recom, cart_recom)
-    output = df_output
+    status = retrain_recom.retrain_model(bicluster_recom, cart_recom, client_recom)
     return status, 200
 
 # ************************************************************** #

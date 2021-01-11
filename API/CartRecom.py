@@ -27,9 +27,15 @@ class CartRecom():
         self.cart_output = pickle.load( open( "pickle/cart_output.pickle", "rb" ) )
         
     def get_products_to_recommend(self, code):
-        index = self.convert_produto[code]
+        recom = None
+        try:
+            index = self.convert_produto[code]
+            recom = self.cart_output[index]
+            
+        except:
+            recom = None
         
-        return self.cart_output[index]
+        return recom
         
     def calculate_recommendations_similarity(self, code, df_compras, df_products, sim_results, df_compras_pivot, max_recom=2):
         #Criar o stopwords para serem usados na recomendação baseado na similaridade de descrições

@@ -56,11 +56,11 @@ class BiclusterRecom():
                         for x in b:
                             produto = self.revert_produto[x]
                             recomendations.append(int(produto))
-            return recomendations, 202
+            return recomendations, "Cliente encontrado", 202
         except KeyError:
-            return "Cliente não encontrado", 404
+            return None, "Cliente não encontrado", 404
         except:
-            return "Erro inesperado encontrado, contacte o administrador", -1
+            return None, "Erro inesperado encontrado, contacte o administrador", -1
            
     #Recomenda clientes baseado na entrada cod_produto
     def recomenda_produto(self, produto):
