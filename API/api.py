@@ -3,7 +3,7 @@
 
 import sys
 sys.path.append(".")
-from flask import Flask, jsonify, request, json
+from flask import Flask, jsonify, request, json, Response
 import json
 import pandas as pd
 from Purchase import Purchase
@@ -47,7 +47,7 @@ def recom_per_user():
     user_id = request.args.get('user_id', None)
     product_id = request.args.get('product_id', None)
     #filial_id = request.args.get('filial_id', None)
-    recommendations = {'CLIENT' : '', 'PRODUCT' : ''}
+    recommendations = {'CLIENT' : None, 'PRODUCT' : None, 'error': []}
     if(user_id != None):
         print("Output recebido do BD.")
         # - Checar na recomendação do turicreate
@@ -79,52 +79,67 @@ def recom_per_user():
                                                          #mimetype='application/json')               
 
                 #------POR ENQUANTO DEIXA ESSE DAQUI------
-                return app.response_class(response = jsonify({'error':'Cliente não consta na base de dados.'}),
-                                                     status = 404,
-                                                     mimetype='application/json') 
-                                                     
-        if(product_id == None):                                  
+                recommendations['error'].append('Código do cliente não consta na base de vendas, tente outro.')
+        # - Recomendação do produto não solicitada
+        if(product_id == None):
+           # - Checa se a recomendação do cliente é vazia ou não
+            recommendations['error'], status = is_empty(recommendations)
             return app.response_class(response = json.dumps(recommendations),
-                                    status = 200,
+                                    status = status,
                                     mimetype='application/json')
+        # - Recomendação do produto também foi solicitada
         else:
-            product_id = int(product_id)
+            try:
+                product_id = int(product_id)
+            except:
+                # - Houve erro semantico no envio no código do produto
+                recommendations['error'], status = is_empty(recommendations, 
+                                                            error_msg='Código do produto inválido, insira um código válido.',
+                                                            code_error=406)
+                return app.response_class(response = json.dumps(recommendations),
+                                        status = status,
+                                        mimetype='application/json')
+            # - Sigo com a recomendação de produto
             product_recom = cart_recom.get_products_to_recommend(product_id)        
-            recommendations['PRODUCT'] = product_recom
-            return app.response_class(response = json.dumps(recommendations),
-                                    status = 200,
-                                    mimetype='application/json')               
-                                          
+            if(product_recom != None):
+                recommendations['PRODUCT'] = product_recom
+                return app.response_class(response = json.dumps(recommendations),
+                                        status = 200,
+                                        mimetype='application/json')
+            else:
+                 # - Checa se a recomendação do cliente é vazia ou não
+                recommendations['error'], status = is_empty(recommendations, 
+                                                            error_msg='Código do produto não consta na base de vendas, tente outro.')
+                return  app.response_class(response = json.dumps(recommendations),
+                                        status = status,
+                                        mimetype='application/json')               
+    # - Houve solicitação de recomendação apenas para produto                                          
     elif(user_id == None and product_id != None):
-        product_id = int(product_id)
+        try:
+            product_id = int(product_id)
+        except:
+            # - Houve erro semantico no envio no código do produto
+            recommendations['error'].append('Código do produto inválido, insira um código válido.')
+            return app.response_class(response = json.dumps(recommendations),
+                                    status = 422,
+                                    mimetype='application/json')
         product_recom = cart_recom.get_products_to_recommend(product_id)
         if(product_recom != None):
             recommendations['PRODUCT'] = product_recom
             return app.response_class(response = json.dumps(recommendations),
                                           status = 200,
-                                          mimetype='application/json') 
-                                             
+                                          mimetype='application/json')                                              
         else:
-            return app.response_class(response = jsonify({'error':'Cliente não consta na base de dados.'}),
-                                          status = 404,
-                                          mimetype='application/json')
+            recommendations['error'].append('Código do produto não consta na base de vendas, tente outro.')
+            return app.response_class(response = json.dumps(recommendations),
+                                    status = 404,
+                                    mimetype='application/json')
                                           
     else:
-        return app.response_class(response = jsonify({'error':'Não há como gerar recomendações sem um produto ou cliente.'}),
-                                          status = 406,
-                                          mimetype='application/json')
-
-# - Lista produtos semelhantes aos recomendados para o cliente
-'''@app.route('/recommendations/desc/<string:user_id>', methods=['GET'])
-def recom_desc_user(user_id):
-    output = pd.read_csv('output.csv', sep = ";")
-    index = output[output['COD_CLIENTE']==user_id].index.values
-    if (len(index) == 0):
-        return jsonify({'error':'not found'}), 404
-    else:
-        recoms = description.list_recom(output, user_id)
-        return recoms.to_json(), 200
-'''
+        recommendations['error'].append('Não há como gerar recomendações sem um produto ou cliente.')
+        return app.response_class(response = json.dumps(recommendations),
+                                    status = 406,
+                                    mimetype='application/json')
 
 # - Lista recomendações em que o produto aparece
 @app.route('/recommendations/product/<string:product_id>', methods=['GET'])
@@ -189,6 +204,32 @@ def add_purchase():
     entry = request.get_json()
     status = add_product.add(entry)
     return status, 201
+
+
+# ************************************************************** #
+# ******************** FUNÇÕES AUXILIARES ********************** #
+# ************************************************************** #
+def is_empty(recom_dict, error_msg = '', code_error = 404):
+    """
+        Função responsável por checar se a recomendação do cliente é vazia, e atualizar
+        o status code e a mensagem de erro.
+        Input:
+            recom_dict: dicionário com as recomendações e erros
+            error_msg: mensagem de erro a ser adicionada, default vazia
+            code_error: código de erro a ser atualizado, default 404
+        Retorno:
+            recom_dict['error']: a mensagem de erro atualizada
+            status: status da resposta 
+    """
+    status = ''
+    recom_dict['error'].append(error_msg)
+    if(recom_dict['CLIENT'] == None):
+        status = code_error
+    else:
+        status = 200
+    return recom_dict['error'], status
+
+
 
 if __name__ == '__main__':
     #app.config['DEBUG'] = True
