@@ -1,0 +1,35 @@
+[1mdiff --git a/API/Recommendation.py b/API/Recommendation.py[m
+[1mindex f135b9a..cbcefeb 100644[m
+[1m--- a/API/Recommendation.py[m
+[1m+++ b/API/Recommendation.py[m
+[36m@@ -15,7 +15,7 @@[m [mclass Recommendation:[m
+     df_products = pd.DataFrame()[m
+     [m
+     ##**************** VARIAVEIS USADAS PARA TESTES DO RETRAIN********************[m
+[31m-    """def __init__(self):[m
+[32m+[m[32m    '''def __init__(self):[m
+         self.db_cart = bd_manager.getSalesTable()[m
+         self.db_cart.CLASSIFICACAO = self.db_cart.CLASSIFICACAO.apply(lambda x : x.strip())[m
+         self.db_cart.QUANTIDADE = self.db_cart.QUANTIDADE.values.astype(np.int16)[m
+[36m@@ -27,7 +27,7 @@[m [mclass Recommendation:[m
+         [m
+         self.df_products = bd_manager.getProductsTable()[m
+         self.df_products.DESCRIPTION = self.df_products.DESCRIPTION.astype('str')[m
+[31m-        self.df_products.DESCRIPTION.fillna('', inplace=True)"""[m
+[32m+[m[32m        self.df_products.DESCRIPTION.fillna('', inplace=True)'''[m
+ [m
+     def retrain_model(self, bicluster_recom, cart_recom, client_recom):[m
+         # - Atualizar tabela de vendas [m
+[36m@@ -74,7 +74,8 @@[m [mclass Recommendation:[m
+         print("\nTreinamento finalizado...")[m
+         [m
+         # - Retrain New Clients Purchase:[m
+[31m-        print("\nTreinando recomendação para novos clientes...")[m
+[31m-        client_recom.train_new_clients(self.db_cart)[m
+[31m-        print("\nTreinamento finalizado...")[m
+[32m+[m[32m        #----- AINDA NAO TEM CODIGO DE FILIAL ENTAO N PRECISA TREINAR AINDA -----[m
+[32m+[m[32m        #print("\nTreinando recomendação para novos clientes...")[m
+[32m+[m[32m        #client_recom.train_new_clients(self.db_cart)[m
+[32m+[m[32m        #print("\nTreinamento finalizado...")[m
+         return ("Recomendações atualizadas.")[m
+\ No newline at end of file[m

@@ -85,22 +85,21 @@ class ClientRecom():
         pickle.dump(self.new_client_output, open("pickle/new_client_output.pickle", "wb"))
         
     def train_cliente_recom(self, db_purchase):
-        classif_array = db_purchase.CLASSIFICACAO.unique()
-        melt_df_array = []
-        for classif in tqdm(classif_array):
-          pandas_result = model.dask_pivot_melt(classif, db_purchase)
-          melt_df_array.append(pandas_result)
+        #Criar o objeto da classe de mapa do cliente pra produto
+        client_product_map = model.ClientProductMap()
+        
+        #Adicionar no mapa, para cada um dos registros de vendas, o cliente, o produto e a quantidade
+        with tqdm(total=len(db_purchase)) as pbar:
+            for index,rows in db_purchase.iterrows():
+                client_product_map.add(rows['COD_CLIENTE'], rows['COD_PRODUTO'], rows['QUANTIDADE'])
+                pbar.update(1)
           
-        print("\nConcatenando dataframes...")
-        df_melt_total = pd.DataFrame()
-        for df_melt in melt_df_array:
-            df_melt_total = pd.concat([df_melt_total, df_melt], ignore_index=True)
-          
-        #df_matrix_norm = model.matrix_normalization(db)
-        #data_norm = model.data_input_creation(df_matrix_norm)
-        #print("\nRealizando split nos dados...")
-        #train_data, test_data = model.split_data(data_norm)
-        data_sframe = model.split_data(df_melt_total)
+        #Normalizar frequencia de compras para cada uma das compras
+        client_product_map_norm = client_product_map.getNormalizedFreq()
+        #Transformar lista de adjacência em dataframe
+        df_melt = pd.DataFrame(client_product_map_norm, columns = ['COD_CLIENTE', 'COD_PRODUTO', 'FREQ_COMPRAS'])
+        
+        data_sframe = model.split_data(df_melt)
         
         print("\nTreinando recomendações de compras...")
         users_to_recommend = list(db_purchase['COD_CLIENTE'].unique())

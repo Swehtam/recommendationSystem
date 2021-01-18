@@ -97,10 +97,12 @@ class BdManagement:
             a recomendação utilizando TuriCreate
         """
         conn = self.connect()
-        query = """SELECT "COD_CLIENTE","COD_PRODUTO","QUANTIDADE", "CLASSIFICACAO"
-                   FROM vendas 
-                   WHERE DATE("DATA") >= (SELECT MAX(DATE("DATA")) FROM vendas) - INTERVAL '1 year' 
-                   ORDER BY DATE("DATA");"""
+        #query = """SELECT "COD_CLIENTE","COD_PRODUTO","QUANTIDADE", "CLASSIFICACAO"
+        #           FROM vendas 
+        #           WHERE DATE("DATA") >= (SELECT MAX(DATE("DATA")) FROM vendas) - INTERVAL '1 year' 
+        #           ORDER BY DATE("DATA");"""
+        query = """SELECT "COD_CLIENTE", "COD_PRODUTO", "QUANTIDADE"
+                   FROM vendas;"""
         data_recom = None
         cursor = conn.cursor()
         try:

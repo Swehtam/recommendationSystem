@@ -4,72 +4,12 @@
 import pandas as pd
 import turicreate as tc
 import numpy as np
-from sklearn.model_selection import train_test_split
 import dask.dataframe as dd
 
 class Model:
     
-    def dask_pivot_melt(self, classif, vendas):  
-        vendas_classif = vendas.loc[vendas['CLASSIFICACAO'] == classif].copy()
-        dask_vendas = dd.from_pandas(vendas_classif, npartitions=4)
-        dask_vendas = dask_vendas.categorize(columns=['COD_PRODUTO'])
-        #Faz a matriz esparsa de cliente por produto em cada categoria
-        dask_vendas_pivot = dask_vendas.pivot_table(values='QUANTIDADE', index='COD_CLIENTE', columns='COD_PRODUTO', aggfunc='sum').fillna(0).astype('float16')
-        #Ordena as categorias de COD PRODUTO para funcionar o min e o max
-        dask_vendas_pivot.columns = dask_vendas_pivot.columns.as_ordered()
-        #Faz a normalização da matriz esparsa
-        dask_vendas_pivot = (dask_vendas_pivot-dask_vendas_pivot.min())/(dask_vendas_pivot.max()-dask_vendas_pivot.min())
-
-        #Coloca em str para funcionar o reset index
-        dask_vendas_pivot.columns = dask_vendas_pivot.columns.astype('str')
-        dask_vendas_input = dask_vendas_pivot.reset_index()
-        dask_vendas_input.index.names = ['FREQ_COMPRAS']
-        #Faz o melt da matriz esparsa
-        dask_data_norm = dd.melt(dask_vendas_input, id_vars=['COD_CLIENTE'], value_name='FREQ_COMPRAS')
-
-        #Remove linhas desnecessárias
-        dask_data_norm = dask_data_norm.loc[dask_data_norm['FREQ_COMPRAS'] > 0]
-
-        #Transforma para pandas
-        return dask_data_norm.compute()
-    
-    '''def matrix_normalization(self,db):
-        #db.QUANTIDADE = db.QUANTIDADE.astype('int32')
-        df_matrix = pd.pivot_table(db, 
-                                   values = 'QUANTIDADE', 
-                                   index = 'COD_CLIENTE', 
-                                   columns = 'COD_PRODUTO', 
-                                   aggfunc = np.sum,
-                                   fill_value=0)
-        columns = list(df_matrix.columns)
-        df_matrix[columns] = df_matrix[columns].astype('float16')
-        df_matrix_norm = (df_matrix-df_matrix.min())/(df_matrix.max()-df_matrix.min())
-        columns = list(df_matrix_norm.columns)
-        df_matrix_norm[columns] = df_matrix_norm[columns].astype('float16')
-        del df_matrix
-        del columns
-        return df_matrix_norm
-
-    def data_input_creation(self,df_matrix_norm):
-        # create a table for input to the modeling
-        columns = list(df_matrix_norm.columns)
-        df_matrix_norm[columns] = df_matrix_norm[columns].astype('float16')
-        data_input = df_matrix_norm.reset_index()
-        del columns
-        del df_matrix_norm
-        data_input.index.names = ['FREQ_COMPRAS']
-        data_norm = pd.melt(data_input, id_vars=['COD_CLIENTE'],
-                            value_name='FREQ_COMPRAS')
-        data_norm = data_norm.dropna()
-        return data_norm'''
-
     # Returns train and test datasets as scalable dataframes
     def split_data(self,data):
-        #train, test = train_test_split(data, test_size = .2)
-        #train_data = tc.SFrame(train)
-        #test_data = tc.SFrame(test)
-        
-        #return train_data, test_data
         data_sframe = tc.SFrame(data)
         return data_sframe
 
@@ -89,4 +29,84 @@ class Model:
         df_output = df_rec[['COD_CLIENTE','recommendedProducts']].drop_duplicates().sort_values('COD_CLIENTE')#.set_index('COD_CLIENTE')
 
         return df_output
+
+    class ClientProductMap: 
+        def __init__(self):
+            self.client_map = {}
+            self.product_map = {}
+            self.client_rmap = []
+            self.product_rmap = []
+
+
+            self.num_cli = -1
+            self.num_prod = -1
+
+            self.adj_list = []
+
+            self.max = []
+          
+        def __del__(self):
+            del self.client_map
+            del self.product_map
+            del self.client_rmap
+            del self.product_rmap
+            del self.adj_list
+            del self.max
+          
+          
+          
+        def add(self, cod_cli, cod_prod, freq):
+            #Pega o id do cliente a partir de cod_cli no seu mapa
+            try:
+                id_cli = self.client_map[cod_cli]
+            except KeyError:
+                #Se não houver este cliente no mapa criá-lo como um novo clinte
+                self.num_cli += 1
+                self.client_map[cod_cli] = self.num_cli
+                self.client_rmap.append(cod_cli)
+                id_cli = self.num_cli
+                self.adj_list.append([])
+              
+
+            #Pega o id do produto a partir de cod_prod no seu mapa
+            try:
+                id_prod = self.product_map[cod_prod]
+            except KeyError:
+                #Se não houver este produto no mapa criá-lo como um novo produto
+                self.num_prod += 1
+                self.product_map[cod_prod] = self.num_prod
+                self.product_rmap.append(cod_prod)
+                id_prod = self.num_prod
+                self.max.append(freq)
+              
+            #Procurando o produto na lista de adjacencia
+            l_cli = self.adj_list[id_cli]
+            new_prod = True
+            for i in range(len(l_cli)):
+                if(l_cli[i][0] == id_prod):
+                    l_cli[i] = (l_cli[i][0], l_cli[i][1] + freq)
+                    if(self.max[id_prod] < l_cli[i][1]):
+                        self.max[id_prod] = l_cli[i][1]
+                    new_prod = False
+                    break
+            #Se o produto não esta na lista, adicione
+            if(new_prod == True):
+                l_cli.append((id_prod, freq))
+                if(self.max[id_prod] < freq):
+                    self.max[id_prod] = freq
+                  
+          
+        def getNormalizedFreq(self):
+            M = []
+            for id_cli in range(len(self.adj_list)):
+                l_cli = self.adj_list[id_cli]
+                for prod in l_cli:
+                    id_prod = prod[0]
+                    freq = prod[1]
+                    norm = 0
+                    if (self.max[id_prod] != 1):
+                        norm = float((freq - 1) / (self.max[id_prod] - 1))
+                    M.append((self.client_rmap[id_cli], self.product_rmap[id_prod], norm))
+                  
+            return M
 
