@@ -75,7 +75,7 @@ class Recommendation:
         
         # - Retrain New Clients Purchase:
         #----- AINDA NAO TEM CODIGO DE FILIAL ENTAO N PRECISA TREINAR AINDA -----
-        #print("\nTreinando recomendação para novos clientes...")
-        #client_recom.train_new_clients(self.db_cart)
-        #print("\nTreinamento finalizado...")
+        print("\nTreinando recomendação para novos clientes...")
+        client_recom.train_new_clients(self.db_cart)
+        print("\nTreinamento finalizado...")
         return ("Recomendações atualizadas.")

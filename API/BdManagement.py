@@ -55,7 +55,8 @@ class BdManagement:
                             "COD_PRODUTO", 
                             "NOME_PRODUTO",
                             "CLASSIFICACAO",
-                            "QUANTIDADE" FROM vendas;"""
+                            "QUANTIDADE",
+                            "COD_FILIAL" FROM vendas;"""
         data_armz = None
         cursor = conn.cursor()
         try:
