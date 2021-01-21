@@ -60,7 +60,7 @@ class Recommendation:
         print("\nCriando tabela de adjacencia...")
         bicluster_recom.create_adjacency_list(self.db_cart)
         print("\nTreinando o Bicluster...")
-        bicluster_recom.execute_terminal_command()
+        bicluster_recom.create_biclusters()
         print("\nTreinamento finalizado...")
         
         # - Retrain Add To Cart:

@@ -7,7 +7,6 @@ from flask import Flask, jsonify, request, json, Response
 import json
 import pandas as pd
 from Recommendation import Recommendation
-from Description import Description
 from CartRecom import CartRecom
 from Bicluster.BiclusterRecom import BiclusterRecom
 from BdManagement import BdManagement
@@ -16,7 +15,6 @@ from ClientRecom import ClientRecom
 app = Flask(__name__)
 
 retrain_recom = Recommendation()
-description = Description()
 cart_recom = CartRecom()
 bicluster_recom = BiclusterRecom()
 bd_manager = BdManagement()
