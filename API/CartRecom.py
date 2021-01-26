@@ -26,15 +26,24 @@ class CartRecom():
         self.convert_produto = pickle.load( open( "pickle/cart_convert_produto.pickle", "rb" ) )
         self.cart_output = pickle.load( open( "pickle/cart_output.pickle", "rb" ) )
         
-    def get_products_to_recommend(self, code):
+    def get_products_to_recommend(self, product_codes):
         recom = None
         try:
-            index = self.convert_produto[code]
-            recom = self.cart_output[index]
-            
+            multiple_recom = []
+            for prod in product_codes:                
+                index = self.convert_produto[prod]
+                single_recom = self.cart_output[index]
+                multiple_recom += single_recom
+            """similarity_dict = {}
+            [similarity_dict [t [0]].append(t [1]) if t [0] in list(similarity_dict.keys()) else similarity_dict.update({t [0]: [t [1]]}) for t in multiple_recom]
+            n_prod = len(product_codes)
+            for key in similarity_dict:
+              similarity_dict[key] = sum(similarity_dict[key])/n_prod            
+            recommended_products = sorted(similarity_dict.items(), key=lambda x: x[1], reverse = True)
+            recommended_products = [lis[0] for lis in recommended_products]"""
+            recom = multiple_recom #recommended_products[:10]                     
         except:
             recom = None
-        
         return recom
         
     def calculate_recommendations_similarity(self, code, df_compras, df_products, sim_results, df_compras_pivot, max_recom=2):

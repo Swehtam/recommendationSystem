@@ -58,7 +58,7 @@ def recom_per_user():
                 status = 200
                 
             else:
-                #------POR ENQUANTO COMO NÃO TEM COD_FILIAL, ENTAO DEIXA ISSO AQUI COMENTADO------
+                # - Código de filial
                 if(filial_id != None):
                     filial_erro = False
                     try:
@@ -96,7 +96,11 @@ def recom_per_user():
         # - Recomendação do produto também foi solicitada
         else:
             try:
-                product_id = int(product_id)
+                product_input = product_id.split(',')
+                product_codes = []
+                for prod in product_input:
+                    if (prod != ''):
+                        product_codes.append(int(prod))
             except:
                 # - Houve erro semantico no envio no código do produto
                 recommendations['error'], status = is_empty(recommendations, 
@@ -106,7 +110,7 @@ def recom_per_user():
                                         status = status,
                                         mimetype='application/json')
             # - Sigo com a recomendação de produto
-            product_recom = cart_recom.get_products_to_recommend(product_id)        
+            product_recom = cart_recom.get_products_to_recommend(product_codes)        
             if(product_recom != None):
                 recommendations['PRODUCT'] = product_recom
                 return app.response_class(response = json.dumps(recommendations),
@@ -123,14 +127,18 @@ def recom_per_user():
     # - Houve solicitação de recomendação apenas para produto                                          
     elif(user_id == None and product_id != None):
         try:
-            product_id = int(product_id)
+            product_input = product_id.split(',')
+            product_codes = []
+            for prod in product_input:
+                if (prod != ''):
+                    product_codes.append(int(prod))
         except:
             # - Houve erro semantico no envio no código do produto
             recommendations['error'].append('Codigo do produto invalido, insira um codigo valido.')
             return app.response_class(response = json.dumps(recommendations),
                                     status = 422,
                                     mimetype='application/json')
-        product_recom = cart_recom.get_products_to_recommend(product_id)
+        product_recom = cart_recom.get_products_to_recommend(product_codes)
         if(product_recom != None):
             recommendations['PRODUCT'] = product_recom
             return app.response_class(response = json.dumps(recommendations),
