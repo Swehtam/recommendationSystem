@@ -58,7 +58,7 @@ def recom_per_user():
                 status = 200
                 
             else:
-                #------POR ENQUANTO COMO NÃO TEM COD_FILIAL, ENTAO DEIXA ISSO AQUI COMENTADO------
+                # - Código de filial
                 if(filial_id != None):
                     filial_erro = False
                     try:
@@ -95,18 +95,75 @@ def recom_per_user():
                                     mimetype='application/json')
         # - Recomendação do produto também foi solicitada
         else:
-            try:
-                product_id = int(product_id)
-            except:
+            product_input = product_id.split(',')
+            product_codes = []
+            integer_error = False
+            has_one_integer = False
+            for prod in product_input:
+                # - Se tiver código vazio pula
+                if (prod != '' ): 
+                    if(is_prod_code_int(prod)):
+                        product_codes.append(int(prod))
+                        has_one_integer = True
+                    else: 
+                        integer_error = True
+            
+            # - Se tiver pelo menos 1 inteiro então pode recomendar corretamente
+            if(has_one_integer): 
+                # - Se tiver um código que não seja inteiro então informar o sistema do cliente
+                if(integer_error):
+                    recommendations['error'], status = is_empty(recommendations, 
+                                                                error_msg='Um dos codigos dos produtos eh invalido, insira um codigo valido.',
+                                                                code_error=status)
+                                                                
+                # - Sigo com a recomendação de produto
+                product_recom = cart_recom.get_products_to_recommend(product_codes)        
+                if(product_recom != None):
+                    recommendations['PRODUCT'] = product_recom
+                    return app.response_class(response = json.dumps(recommendations),
+                                            status = 200,
+                                            mimetype='application/json')
+                else:
+                     # - Checa se a recomendação do cliente é vazia ou não
+                    recommendations['error'], status = is_empty(recommendations, 
+                                                                error_msg='Codigos dos produtos nao constam na base de vendas, tente outros.',
+                                                                code_error=status)
+                    return  app.response_class(response = json.dumps(recommendations),
+                                            status = status,
+                                            mimetype='application/json')   
+            # - Caso nenhum código seja inteiro
+            else: 
                 # - Houve erro semantico no envio no código do produto
                 recommendations['error'], status = is_empty(recommendations, 
-                                                            error_msg='Codigo do produto invalido, insira um codigo valido.',
+                                                            error_msg='Codigos dos produtos invalidos, insira codigos validos.',
                                                             code_error=406)
                 return app.response_class(response = json.dumps(recommendations),
                                         status = status,
                                         mimetype='application/json')
+                        
+    # - Houve solicitação de recomendação apenas para produto                                          
+    elif(user_id == None and product_id != None):
+        product_input = product_id.split(',')
+        product_codes = []
+        integer_error = False
+        has_one_integer = False
+        for prod in product_input:
+            # - Se tiver código vazio pula
+            if (prod != '' ): 
+                if(is_prod_code_int(prod)):
+                    product_codes.append(int(prod))
+                    has_one_integer = True
+                else: 
+                    integer_error = True
+        
+        # - Se tiver pelo menos 1 inteiro então pode recomendar corretamente
+        if(has_one_integer): 
+            # - Se tiver um código que não seja inteiro então informar o sistema do cliente
+            if(integer_error):
+                recommendations['error'].append('Um dos codigos dos produtos eh invalido, insira um codigo valido.')
+                                                            
             # - Sigo com a recomendação de produto
-            product_recom = cart_recom.get_products_to_recommend(product_id)        
+            product_recom = cart_recom.get_products_to_recommend(product_codes)        
             if(product_recom != None):
                 recommendations['PRODUCT'] = product_recom
                 return app.response_class(response = json.dumps(recommendations),
@@ -114,34 +171,18 @@ def recom_per_user():
                                         mimetype='application/json')
             else:
                  # - Checa se a recomendação do cliente é vazia ou não
-                recommendations['error'], status = is_empty(recommendations, 
-                                                            error_msg='Codigo do produto nao consta na base de vendas, tente outro.',
-                                                            code_error=status)
-                return  app.response_class(response = json.dumps(recommendations),
-                                        status = status,
-                                        mimetype='application/json')               
-    # - Houve solicitação de recomendação apenas para produto                                          
-    elif(user_id == None and product_id != None):
-        try:
-            product_id = int(product_id)
-        except:
-            # - Houve erro semantico no envio no código do produto
-            recommendations['error'].append('Codigo do produto invalido, insira um codigo valido.')
+                recommendations['error'].append('Codigos dos produtos nao constam na base de vendas, tente outros.')
+                return app.response_class(response = json.dumps(recommendations),
+                                        status = 404,
+                                        mimetype='application/json')
+        # - Caso nenhum código seja inteiro
+        else: 
+            # - Houve erro semantico no envio nos códigos dos produtos
+            recommendations['error'].append('Codigos dos produtos invalidos, insira codigos validos.')
             return app.response_class(response = json.dumps(recommendations),
                                     status = 422,
                                     mimetype='application/json')
-        product_recom = cart_recom.get_products_to_recommend(product_id)
-        if(product_recom != None):
-            recommendations['PRODUCT'] = product_recom
-            return app.response_class(response = json.dumps(recommendations),
-                                          status = 200,
-                                          mimetype='application/json')                                              
-        else:
-            recommendations['error'].append('Codigo do produto nao consta na base de vendas, tente outro.')
-            return app.response_class(response = json.dumps(recommendations),
-                                    status = 404,
-                                    mimetype='application/json')
-                                          
+                                    
     else:
         recommendations['error'].append('Nao ha como gerar recomendaçoes sem um produto ou cliente.')
         return app.response_class(response = json.dumps(recommendations),
@@ -217,8 +258,13 @@ def is_empty(recom_dict, error_msg = '', code_error = 404):
     else:
         status = 200
     return recom_dict['error'], status
-
-
+    
+def is_prod_code_int(prod_code):
+    try: 
+        int(prod_code)
+        return True
+    except ValueError:
+        return False
 
 if __name__ == '__main__':
     #app.config['DEBUG'] = True
