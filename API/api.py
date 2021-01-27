@@ -222,4 +222,4 @@ def is_empty(recom_dict, error_msg = '', code_error = 404):
 
 if __name__ == '__main__':
     #app.config['DEBUG'] = True
-    app.run(host='0.0.0.0', port=5000)
+    app.run()

@@ -19,11 +19,10 @@ class Recommendation:
         self.db_cart = bd_manager.getSalesTable()
         self.db_cart.CLASSIFICACAO = self.db_cart.CLASSIFICACAO.apply(lambda x : x.strip())
         self.db_cart.QUANTIDADE = self.db_cart.QUANTIDADE.values.astype(np.int16)
-        self.db_cart.COD_PRODUTO = self.db_cart.COD_PRODUTO.apply(lambda x : str(x))
         self.db_cart.COD_CLIENTE = self.db_cart.COD_CLIENTE.apply(lambda x : str(x))
         
-        self.db_purchase = bd_manager.getClientRecomTable()
-        self.db_purchase.QUANTIDADE = self.db_purchase.QUANTIDADE.astype('int16')
+        #self.db_purchase = bd_manager.getClientRecomTable()
+        #self.db_purchase.QUANTIDADE = self.db_purchase.QUANTIDADE.astype('int16')
         
         self.df_products = bd_manager.getProductsTable()
         self.df_products.DESCRIPTION = self.df_products.DESCRIPTION.astype('str')
@@ -36,7 +35,6 @@ class Recommendation:
         self.db_cart = bd_manager.getSalesTable()
         self.db_cart.CLASSIFICACAO = self.db_cart.CLASSIFICACAO.apply(lambda x : x.strip())
         self.db_cart.QUANTIDADE = self.db_cart.QUANTIDADE.values.astype(np.int16)
-        self.db_cart.COD_PRODUTO = self.db_cart.COD_PRODUTO.apply(lambda x : str(x))
         self.db_cart.COD_CLIENTE = self.db_cart.COD_CLIENTE.apply(lambda x : str(x))
         print("\nFinalizado!...")
 

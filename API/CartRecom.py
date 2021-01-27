@@ -31,6 +31,7 @@ class CartRecom():
         try:
             index = self.convert_produto[code]
             recom = self.cart_output[index]
+            print(recom)
             
         except:
             recom = None
@@ -60,7 +61,7 @@ class CartRecom():
           similarity_dict[key] = sum(similarity_dict[key])/2
 
         recommended_products = sorted(similarity_dict.items(), key=lambda x: x[1], reverse = True)
-        recommended_products = [str(lis[0]) for lis in recommended_products] 
+        recommended_products = [lis for lis in recommended_products] 
         return recommended_products[:10]
     
     def get_products_list(self, code, products):
@@ -73,8 +74,7 @@ class CartRecom():
     
     #Modelo de recomendação por similaridade por compras
     def purchase_similarity_recom(self, products_codes, code, df_compras_pivot):
-    
-        df_matrix_purchase = df_compras_pivot[df_compras_pivot.index.get_level_values("COD_PRODUTO").isin(products_codes)].unstack(level="COD_CLIENTE").fillna(0).astype('float16')
+        df_matrix_purchase = df_compras_pivot[df_compras_pivot.index.get_level_values("COD_PRODUTO").isin(products_codes)].unstack(level="COD_PRODUTO").fillna(0).astype('float16')
         df_matrix_purchase.columns = df_matrix_purchase.columns.droplevel(0)
         df_matrix_purchase = df_matrix_purchase.T
         
