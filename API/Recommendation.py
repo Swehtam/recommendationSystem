@@ -15,7 +15,7 @@ class Recommendation:
     df_products = pd.DataFrame()
     
     ##**************** VARIAVEIS USADAS PARA TESTES DO RETRAIN********************
-    """def __init__(self):
+    def __init__(self):
         self.db_cart = bd_manager.getSalesTable()
         self.db_cart.CLASSIFICACAO = self.db_cart.CLASSIFICACAO.apply(lambda x : x.strip())
         self.db_cart.QUANTIDADE = self.db_cart.QUANTIDADE.values.astype(np.int16)
@@ -24,12 +24,12 @@ class Recommendation:
         #self.db_purchase = bd_manager.getClientRecomTable()
         #self.db_purchase.QUANTIDADE = self.db_purchase.QUANTIDADE.astype('int16')
         
-        self.df_products = bd_manager.getProductsTable()
-        self.df_products.DESCRIPTION = self.df_products.DESCRIPTION.astype('str')
-        self.df_products.DESCRIPTION.fillna('', inplace=True)"""
+        #self.df_products = bd_manager.getProductsTable()
+        #self.df_products.DESCRIPTION = self.df_products.DESCRIPTION.astype('str')
+        #self.df_products.DESCRIPTION.fillna('', inplace=True)
 
     def retrain_model(self, bicluster_recom, cart_recom, client_recom):
-        # - Atualizar tabela de vendas 
+        """# - Atualizar tabela de vendas 
         print("\nAtualizando todas tabela encontradas no DB...")
         print("\nAtualizando tabela de vendas...")
         self.db_cart = bd_manager.getSalesTable()
@@ -42,18 +42,17 @@ class Recommendation:
         print("\nAtualizando tabela para recomendação de cliente...")
         self.db_purchase = bd_manager.getClientRecomTable()
         self.db_purchase.QUANTIDADE = self.db_purchase.QUANTIDADE.astype('int16')
-        print("\nFinalizado!...")
+        print("\nFinalizado!...")"""
 
         # - Atualizar tabela de produtos
         print("\nAtualizando tabela de produtos no DB...")
         description_extractor.create_df_product(self.db_cart)
         self.df_products = bd_manager.getProductsTable()
-        self.df_products.DESCRIPTION = self.df_products.DESCRIPTION.astype('str')
-        self.df_products.DESCRIPTION.fillna('', inplace=True)
+        print(self.df_products)
         print("\nFinalizado!...")
         print("\nAtualizações de tabelas finalizada...")
         
-        # - Retrain Bicluster
+        """# - Retrain Bicluster
         print("\nTreinando recomendações do bicluster...") 
         print("\nCriando tabela de adjacencia...")
         bicluster_recom.create_adjacency_list(self.db_cart)
@@ -75,5 +74,5 @@ class Recommendation:
         #----- AINDA NAO TEM CODIGO DE FILIAL ENTAO N PRECISA TREINAR AINDA -----
         print("\nTreinando recomendação para novos clientes...")
         client_recom.train_new_clients(self.db_cart)
-        print("\nTreinamento finalizado...")
+        print("\nTreinamento finalizado...")"""
         return ("Recomendações atualizadas.")

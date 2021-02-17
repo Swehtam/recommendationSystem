@@ -6,7 +6,13 @@ from requests import get
 from tqdm import tqdm
 import re
 import html
+import regex as re
+from unidecode import unidecode
+import nltk
+from nltk.tokenize import word_tokenize
 from BdManagement import BdManagement
+nltk.download('rslp')
+nltk.download('punkt')
 
 bd_manager = BdManagement()
 
@@ -57,8 +63,27 @@ class ExtractDescription():
             #descriptions.append(unescape_result)     
 
         # Add descriptions into the descriptions columns
+        data.DESCRIPTION = data.DESCRIPTION.fillna('')
         data.DESCRIPTION = data.DESCRIPTION.astype('str')
+        
+        data.DESCRIPTION = data.DESCRIPTION.apply(lambda x : x.lower())
+        # - remove números e caracteres especiais 
+        data.DESCRIPTION = data.DESCRIPTION.apply(lambda x : re.sub('[||\.|/|$|\(|\)|-|\+|:|•]', ' ', x))
+        # - remove acentos 
+        data.DESCRIPTION = data.DESCRIPTION.apply(lambda x: unidecode(x))
+
+        # - reduz as palavras a seus radicais
+        stemmer = nltk.stem.RSLPStemmer()
+        data.DESCRIPTION = data.DESCRIPTION.apply(lambda x: self.stemSentence(x))
         # COLOCAR ESSE DATAFRAME NO BD
-        bd_manager.updateProductTable(data)
+        #bd_manager.updateProductTable(data)
 
         print("Tudo pronto!")
+        
+    def stemSentence(sentence):
+        token_words=word_tokenize(sentence)
+        stem_sentence=[]
+        for word in token_words:
+            stem_sentence.append(stemmer.stem(word))
+            stem_sentence.append(" ")
+        return "".join(stem_sentence)

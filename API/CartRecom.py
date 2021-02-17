@@ -48,15 +48,7 @@ class CartRecom():
         recommended_products = [str(lis[0]) for lis in recommended_products]
         return recommended_products[:10]
         
-    def calculate_recommendations_similarity(self, code, df_compras, df_products, sim_results, df_compras_pivot, max_recom=2):
-        #Criar o stopwords para serem usados na recomendação baseado na similaridade de descrições
-        stopwords = nltk.corpus.stopwords.words('portuguese')
-        stopwords.extend(["nao", "...", "[", ']'])
-        stopwords.extend(["pois"])
-        stopwords.extend(["qualquer"])
-        stopwords.extend(["descrição"])
-        stopwords.extend(["produto"])
-        
+    def calculate_recommendations_similarity(self, code, df_compras, df_products, sim_results, df_compras_pivot, stopwords, max_recom=2):
         products = similarityModel.get_products_recom_array(code, max_recom, df_compras, sim_results)
         products_codes = self.get_products_list(code, products)
         purchase_similarity = self.purchase_similarity_recom(products_codes, code, df_compras_pivot)
@@ -92,20 +84,21 @@ class CartRecom():
         cos_sim_purchase = cosine_similarity(df_matrix_purchase_compressed)
         
         df_matrix_purchase = df_matrix_purchase.reset_index()
-        index = 0
-        for p_code in df_matrix_purchase['COD_PRODUTO']:
-            if (p_code == code):
-                similar_indexes = cos_sim_purchase[index].argsort()[:-100:-1]
-                similar_items = [(cos_sim_purchase[index][i], df_matrix_purchase['COD_PRODUTO'][i]) for i in similar_indexes]
-                return similar_items[1:]
+        
+        index = df_matrix_purchase.index[df_matrix_purchase['COD_PRODUTO'] == code].tolist()[0]
+        #for p_code in df_matrix_purchase['COD_PRODUTO']:
+        #    if (p_code == code):
+        similar_indexes = cos_sim_purchase[index].argsort()[:-100:-1]
+        similar_items = [(cos_sim_purchase[index][i], df_matrix_purchase['COD_PRODUTO'][i]) for i in similar_indexes]
+        return similar_items[1:]
                 
-            index += 1
+        #    index += 1
         
     #Modelo de recomendação por similaridade de descrição dos produtos
     def description_similarity_recom(self, products_codes, code, df_products, stopwords):
         df_modelo = df_products[df_products.COD_PRODUTO.isin(products_codes)]
         df_modelo = df_modelo.copy()
-        df_modelo.DESCRIPTION = df_modelo.DESCRIPTION.astype('str')
+        """df_modelo.DESCRIPTION = df_modelo.DESCRIPTION.astype('str')
 
         df_modelo.DESCRIPTION = df_modelo.DESCRIPTION.apply(lambda x : x.lower())
         # - remove números e caracteres especiais 
@@ -115,7 +108,7 @@ class CartRecom():
 
         # - reduz as palavras a seus radicais 
         stemmer = nltk.stem.RSLPStemmer()
-        df_modelo.DESCRIPTION = df_modelo.DESCRIPTION.apply(lambda x: stemmer.stem(x))
+        df_modelo.DESCRIPTION = df_modelo.DESCRIPTION.apply(lambda x: stemmer.stem(x))"""
         
         # - reseta indices
         df_modelo.reset_index(inplace = True)
@@ -127,14 +120,14 @@ class CartRecom():
         TFIDF_matrix_sparse = csr_matrix(TFIDF_matrix)
         cos_similarity = linear_kernel(TFIDF_matrix_sparse, TFIDF_matrix_sparse)
                 
-        index = 0
-        for p_code in df_modelo['COD_PRODUTO']:
-            if (p_code == code):
-                similar_indexes = cos_similarity[index].argsort()[:-100:-1]
-                similar_items = [(cos_similarity[index][i], df_modelo['COD_PRODUTO'][i]) for i in similar_indexes]
-                return similar_items[1:]
+        index = df_modelo.index[df_modelo['COD_PRODUTO'] == code].tolist()[0]
+        #for p_code in df_modelo['COD_PRODUTO']:
+        #    if (p_code == code):
+        similar_indexes = cos_similarity[index].argsort()[:-100:-1]
+        similar_items = [(cos_similarity[index][i], df_modelo['COD_PRODUTO'][i]) for i in similar_indexes]
+        return similar_items[1:]
                 
-            index += 1
+        #    index += 1
                 
     #Cria uma matrix esparsa de classificacao por produto
     def create_matrix_u_c(self, df_compras):
@@ -171,12 +164,20 @@ class CartRecom():
         self.convert_produto = convert_produto
         pickle.dump(self.convert_produto, open("pickle/cart_convert_produto.pickle", "wb"))
         
+        #Criar o stopwords para serem usados na recomendação baseado na similaridade de descrições
+        stopwords = nltk.corpus.stopwords.words('portuguese')
+        stopwords.extend(["nao", "...", "[", ']'])
+        stopwords.extend(["pois"])
+        stopwords.extend(["qualquer"])
+        stopwords.extend(["descrição"])
+        stopwords.extend(["produto"])
+        
         cart_output = []
         df_compras_pivot = df_compras.groupby(["COD_PRODUTO", "COD_CLIENTE"]).agg({"QUANTIDADE": 'sum'})
         print("\nCriando o output para cada produto...")
         with tqdm(total=len(self.convert_produto)) as pbar:
             for key in self.convert_produto:
-                results = self.calculate_recommendations_similarity(key, df_compras, df_products, sim_results, df_compras_pivot)
+                results = self.calculate_recommendations_similarity(key, df_compras, df_products, sim_results, df_compras_pivot, stopwords)
                 cart_output.append(results)
                 pbar.update(1)
 
