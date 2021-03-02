@@ -7,50 +7,56 @@ import numpy as np
 
 class SimilarityModel():
 
-    def create_cosine_similarity_matrix(self, matrix_u_c, classif_dict):
+    def create_cosine_similarity_matrix(self, matrix_u_c, classif_dict, df_compras, max_recom = 3):
         '''
-            Calcula a matriz de similaridades entre classificações
+            Cria dicionario contendo os possíveis produtos a serem recomendados,
+            baseado na classificação do produto adicionado no carrinho
 
             Input: matrix_u_c - matriz transposta de usuario por classe de produto
             Output: sim_results - dicionário de classes de itens
                                  (key: classe, value: [classe, similaridade])
         '''
+        #Cria o dicionário de classificação por produto
+        print("\nCriando dicionário de classificacao por produto...")
+        classif_product_dict = self.create_classif_product_dict(df_compras)
+
         matrix_u_c_compressed = csr_matrix(matrix_u_c, dtype=np.int8)
         cos_similarity = cosine_similarity(matrix_u_c_compressed)
 
         matrix_u_c_index = matrix_u_c.copy().reset_index()
-        sim_results = {} 
+        
+        #Dicionario com os posíveis produtos a serem recomendados,
+        #Baseado na classificação do produto adicionado no carrinho
+        print("\nCriando dicionário de classificacao com possíveis produtos a serem recomendados...")
+        classif_results = {} 
         for index,rows in matrix_u_c_index.iterrows():
             #Se for True então deixa a classificacao pra ser recomendada
             if (classif_dict[rows['CLASSIFICACAO']]): 
                 similar_indexes = cos_similarity[index].argsort()[::-1]
-                #Se for False tira o proprio nome da Classificacao da recomendação
+                similar_indexes = similar_indexes[:max_recom]
+            
+            #Se for False tira o proprio nome da Classificacao da recomendação
             else: 
                 similar_indexes = cos_similarity[index].argsort()[:-1]
                 similar_indexes = similar_indexes[::-1]
+                similar_indexes = similar_indexes[:max_recom]
 
-            similar_items = [(cos_similarity[index][i], matrix_u_c_index['CLASSIFICACAO'][i]) for i in similar_indexes]
-            sim_results[rows['CLASSIFICACAO']] = similar_items
+            products_list = []
+            for i in similar_indexes:
+                classif = matrix_u_c_index['CLASSIFICACAO'][i]
+                list_aux = classif_product_dict[classif]
+                products_list = products_list + list_aux
+
+            classif_results[rows['CLASSIFICACAO']] = products_list
         
-        return sim_results
+        return classif_results
 
-    def get_product_classif(self, code, df_compras):
-        classif = df_compras.loc[df_compras['COD_PRODUTO'] == code]['CLASSIFICACAO'].values[0]
-        return classif
-
-    def recommendation(self, code, max_recom, df_compras, sim_results):
-        classification = self.get_product_classif(code, df_compras)
+    #Metodo para criar um dicionario onde a chave é o nome da classificação
+    #E os valores são os codigos dos produtos dessa classificação
+    #Esse dicionário é criado para melhorar o acesso ao códigos dos produtos
+    def create_classif_product_dict(self, df_compras):
+        classif_product_dict = {}
+        for classif in df_compras.CLASSIFICACAO.unique():
+            classif_product_dict[classif] = df_compras.loc[df_compras['CLASSIFICACAO'] == classif]['COD_PRODUTO'].unique().tolist()
         
-        recoms = sim_results[classification][:max_recom]
-        return recoms
-
-    def get_products_recom_array(self, code, max_recom, df_compras, sim_results):
-        recoms = self.recommendation(code, max_recom, df_compras, sim_results)
-        
-        df_products_recoms = pd.Series(dtype='int64')
-
-        for rec in recoms:
-            df_aux = df_compras.loc[df_compras['CLASSIFICACAO'] == rec[1]]['COD_PRODUTO'].drop_duplicates()
-            df_products_recoms = pd.concat([df_products_recoms, df_aux], ignore_index=True)
-
-        return df_products_recoms.to_numpy()
+        return classif_product_dict

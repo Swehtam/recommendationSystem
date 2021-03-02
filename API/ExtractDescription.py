@@ -59,8 +59,7 @@ class ExtractDescription():
                 unescape_result = unescape_result.replace(entities, self.htmlEntities[entities])
                 
             # Append the result on the descriptions list
-            data.loc[data['COD_PRODUTO'] == product, 'DESCRIPTION'] = str(unescape_result)
-            #descriptions.append(unescape_result)     
+            data.loc[data['COD_PRODUTO'] == product, 'DESCRIPTION'] = str(unescape_result) 
 
         # Add descriptions into the descriptions columns
         data.DESCRIPTION = data.DESCRIPTION.fillna('')
@@ -74,14 +73,17 @@ class ExtractDescription():
 
         # - reduz as palavras a seus radicais
         stemmer = nltk.stem.RSLPStemmer()
-        data.DESCRIPTION = data.DESCRIPTION.apply(lambda x: self.stemSentence(x))
+        data.DESCRIPTION = data.DESCRIPTION.apply(lambda x: self.stemSentence(x, stemmer))
+        
+        #Converte todas as descrições em utf-8, para não dar erro ao salvar no banco de dados
+        data.DESCRIPTION = data.DESCRIPTION.apply(lambda x: x.encode('unicode-escape').decode('utf-8'))
         # COLOCAR ESSE DATAFRAME NO BD
-        #bd_manager.updateProductTable(data)
+        bd_manager.updateProductTable(data)
 
         print("Tudo pronto!")
         
-    def stemSentence(sentence):
-        token_words=word_tokenize(sentence)
+    def stemSentence(self, sentence, stemmer):
+        token_words=word_tokenize(sentence, language='portuguese')
         stem_sentence=[]
         for word in token_words:
             stem_sentence.append(stemmer.stem(word))

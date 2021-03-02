@@ -84,16 +84,7 @@ class ClientRecom():
         self.new_client_output = new_client_output
         pickle.dump(self.new_client_output, open("pickle/new_client_output.pickle", "wb"))
         
-    def train_cliente_recom(self, db_purchase):
-        #Criar o objeto da classe de mapa do cliente pra produto
-        client_product_map = model.ClientProductMap()
-        
-        #Adicionar no mapa, para cada um dos registros de vendas, o cliente, o produto e a quantidade
-        with tqdm(total=len(db_purchase)) as pbar:
-            for index,rows in db_purchase.iterrows():
-                client_product_map.add(rows['COD_CLIENTE'], rows['COD_PRODUTO'], rows['QUANTIDADE'])
-                pbar.update(1)
-          
+    def train_cliente_recom(self, db_purchase, client_product_map):          
         #Normalizar frequencia de compras para cada uma das compras
         client_product_map_norm = client_product_map.getNormalizedFreq()
         #Transformar lista de adjacência em dataframe

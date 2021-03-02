@@ -38,7 +38,6 @@ class DMean():
         with tqdm(total=len(df_class_cliente)) as pbar:
             for index,rows in df_class_cliente.iterrows():
                 classif = rows['CLASSIFICACAO']
-                #print("classificacao: " + classif)
                 d_mean = self.get_d_mean_classif(classif, df_compras_grouped)
                 df_class_cliente.loc[[index], 'D_MEDIA'] = d_mean
                 pbar.update(1)
