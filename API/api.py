@@ -44,8 +44,15 @@ def recom_per_user():
     status = None
     if(user_id != None):
         print("Output recebido do BD.")
-        # - Checar na recomendação do turicreate
-        recom = client_recom.get_client_to_recommend(user_id)
+        
+        recom = None            
+        if(product_id != None):
+            #Se tiver um produto no carrinho, passa como parametro os códigos dos produtos em string
+            recom = client_recom.get_client_to_recommend(user_id, product_id)
+        else:
+            #Se não tiver produtos no carrinho, checa na recomendação do turicreate
+            recom = client_recom.get_client_to_recommend(user_id)  
+        
         if(recom != None):
             recommendations['CLIENT'] = recom
             status = 200
@@ -71,7 +78,14 @@ def recom_per_user():
                                     
                     if(not filial_erro):
                         #Fazer chamar a recomendação pra cliente novo
-                        recom_new = client_recom.recommend_to_new_client(filial_id)
+                        recom_new = None
+                        if(product_id != None):
+                            #Se tiver um produto no carrinho, passa como parametro os códigos dos produtos em string
+                            recom_new = client_recom.recommend_to_new_client(filial_id, product_id) 
+                        else:
+                            #Se não tiver produtos no carrinho, recomenda usando clientes novos
+                            recom_new = client_recom.recommend_to_new_client(filial_id) 
+                            
                         if(recom_new != None):
                             recommendations['CLIENT'] = recom_new
                             status = 200
@@ -84,8 +98,6 @@ def recom_per_user():
                     recommendations['error'].append('Codigo da filial nao foi informado para a requisao de novo cliente.')
                     status = 400
 
-                #------POR ENQUANTO DEIXA ESSE DAQUI------
-                #recommendations['error'].append('Código do cliente não consta na base de vendas, tente outro.')
         # - Recomendação do produto não solicitada
         if(product_id == None):
            # - Checa se a recomendação do cliente é vazia ou não
@@ -117,7 +129,8 @@ def recom_per_user():
                                                                 code_error=status)
                                                                 
                 # - Sigo com a recomendação de produto
-                product_recom = cart_recom.get_products_to_recommend(product_codes)        
+                #Obs.: Sempre enviar os produtos recomendados do cliente, pois ele sempre existe nesse caso 
+                product_recom = cart_recom.get_products_to_recommend(product_codes, recommendations['CLIENT'])        
                 if(product_recom != None):
                     recommendations['PRODUCT'] = product_recom
                     return app.response_class(response = json.dumps(recommendations),

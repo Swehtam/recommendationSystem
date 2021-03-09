@@ -20,23 +20,43 @@ class ClientRecom():
         self.new_client_output = pickle.load( open( "pickle/new_client_output.pickle", "rb" ) )
         self.client_output = bd_manager.getOutputRecom()
         
-    def get_client_to_recommend(self, user_id):
+    def get_client_to_recommend(self, user_id, product_id = None):
         recom = None
         try:
             index = self.client_output[self.client_output['COD_CLIENTE']==user_id].index.values
             recom = self.client_output[self.client_output.index == index[0]].recommendedProducts.values[0].split('|')[:10]
             
+            if(product_id != None):
+                #Transforma a lista em dict, para ficar mais rápido o acesso
+                recom_dict = dict.fromkeys(recom)
+                product_input = product_id.split(',')
+                for prod in product_input:
+                    # - Se tiver código vazio pula
+                    if (prod != '' ):
+                        # - Se o código do produto estiver na recomendação, então tira
+                        if(prod in recom_dict):
+                            recom.remove(prod)
         except:
             recom = None
         
         return recom
         
-    def recommend_to_new_client(self, cod_filial):
+    def recommend_to_new_client(self, cod_filial, product_id = None):
         recom = None
         try:
             #Pega o codigo da filial, com ele recebe a posição no array referente ao cod_filial e retorna os codigos dos produtos corretos
             recom = self.new_client_output[self.convert_filial[cod_filial]]
             
+            if(product_id != None):
+                #Transforma a lista em dict, para ficar mais rápido o acesso
+                recom_dict = dict.fromkeys(recom)
+                product_input = product_id.split(',')
+                for prod in product_input:
+                    # - Se tiver código vazio pula
+                    if (prod != '' ):
+                        # - Se o código do produto estiver na recomendação, então tira
+                        if(prod in recom_dict):
+                            recom.remove(prod)
         except:
             recom = None
             

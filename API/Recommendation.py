@@ -17,7 +17,7 @@ class Recommendation:
     df_products = pd.DataFrame()
     
     ##**************** VARIAVEIS USADAS PARA TESTES DO RETRAIN********************
-    """def __init__(self):
+    '''def __init__(self):
         self.db_cart = bd_manager.getSalesTable()
         self.db_cart.CLASSIFICACAO = self.db_cart.CLASSIFICACAO.apply(lambda x : x.strip())
         self.db_cart.QUANTIDADE = self.db_cart.QUANTIDADE.values.astype(np.int16)
@@ -28,7 +28,7 @@ class Recommendation:
         
         self.df_products = bd_manager.getProductsTable()
         self.df_products.DESCRIPTION.fillna('', inplace=True)
-        self.df_products.DESCRIPTION = self.df_products.DESCRIPTION.astype('str')"""
+        self.df_products.DESCRIPTION = self.df_products.DESCRIPTION.astype('str')'''
         
 
     def retrain_model(self, bicluster_recom, cart_recom, client_recom):

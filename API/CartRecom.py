@@ -26,7 +26,7 @@ class CartRecom():
         self.convert_produto = pickle.load( open( "pickle/cart_convert_produto.pickle", "rb" ) )
         self.cart_output = pickle.load( open( "pickle/cart_output.pickle", "rb" ) )
         
-    def get_products_to_recommend(self, product_codes):
+    def get_products_to_recommend(self, product_codes, client_recom = None):
         multiple_recom = []
         n_prod = len(product_codes)
         for prod in product_codes:
@@ -38,11 +38,28 @@ class CartRecom():
                 n_prod -= 1
                 if(n_prod == 0):
                     return None
-                
+                    
+                    
         similarity_dict = {}
         [similarity_dict [t [0]].append(t [1]) if t [0] in list(similarity_dict.keys()) else similarity_dict.update({t [0]: [t [1]]}) for t in multiple_recom]
         for key in similarity_dict:
-            similarity_dict[key] = sum(similarity_dict[key])/n_prod            
+            similarity_dict[key] = sum(similarity_dict[key])/n_prod 
+
+        #Aqui eu vou ter o dicionário com os códigos dos produtos e seus scores
+        #Então, deve-se remover os produtos que estão adicionados no carrinho desse dicionário
+        #Produtos esses que estão no array "product_codes"
+        for prod in product_codes:
+            if (prod in similarity_dict.keys()):
+                similarity_dict.pop(prod, None)
+                
+        #Remover produtos que já foram recomendados para o cliente em especifico
+        if(client_recom != None):
+            client_recom = [int(i) for i in client_recom]
+            #Transforma em dicionario para ficar mais rapido a iteração
+            client_recom_dict = dict.fromkeys(client_recom)
+            for client_prod in client_recom_dict.keys():
+                if (client_prod in similarity_dict.keys()):
+                    similarity_dict.pop(client_prod, None)
             
         recommended_products = sorted(similarity_dict.items(), key=lambda x: x[1], reverse = True)
         recommended_products = [str(lis[0]) for lis in recommended_products]
